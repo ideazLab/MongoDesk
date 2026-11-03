@@ -1,0 +1,113 @@
+name: Build desktop applications
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: desktop-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: macOS Apple Silicon
+            os: macos-15
+            artifact: mongodesk-macos-arm64
+            task: packageDmg
+            package: build/compose/binaries/main/dmg/*.dmg
+          - name: macOS Intel
+            os: macos-15-intel
+            artifact: mongodesk-macos-x64
+            task: packageDmg
+            package: build/compose/binaries/main/dmg/*.dmg
+          - name: Windows x64
+            os: windows-2025
+            artifact: mongodesk-windows-x64
+            task: packageMsi
+            package: build/compose/binaries/main/msi/*.msi
+          - name: Linux x64
+            os: ubuntu-24.04
+            artifact: mongodesk-linux-x64
+            task: packageDeb
+            package: build/compose/binaries/main/deb/*.deb
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Java 21
+        uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: gradle
+          cache-dependency-path: |
+            **/*.gradle*
+            gradle/wrapper/gradle-wrapper.properties
+
+      - name: Install Linux packaging and display dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes fakeroot xvfb
+
+      - name: Configure WiX 3 for Windows MSI packaging
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $root = [Environment]::GetFolderPath('ProgramFilesX86')
+          $wix = Get-ChildItem -Path $root -Directory -Filter 'WiX Toolset v3*' |
+            Sort-Object Name -Descending | Select-Object -First 1
+          if (-not $wix) { throw 'WiX 3 is required by JDK 21 jpackage.' }
+          $bin = Join-Path $wix.FullName 'bin'
+          if (-not (Test-Path (Join-Path $bin 'candle.exe'))) { throw 'WiX candle.exe was not found.' }
+          if (-not (Test-Path (Join-Path $bin 'light.exe'))) { throw 'WiX light.exe was not found.' }
+          $bin | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
+      - name: Install checksum-verified MongoDB Database Tools for integration tests
+        run: python packaging/install-database-tools.py --manifest packaging/database-tools-lock.json
+
+      - name: Test and package (macOS)
+        if: runner.os == 'macOS'
+        run: ./gradlew --no-daemon --stacktrace build ${{ matrix.task }} -PciUnsigned=true
+
+      - name: Test and package (Windows)
+        if: runner.os == 'Windows'
+        run: .\gradlew.bat --no-daemon --stacktrace build ${{ matrix.task }} -PciUnsigned=true
+
+      - name: Test and package (Linux)
+        if: runner.os == 'Linux'
+        run: xvfb-run --auto-servernum ./gradlew --no-daemon --stacktrace build ${{ matrix.task }} -PciUnsigned=true
+
+      - name: Upload application installer
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: ${{ matrix.artifact }}
+          path: ${{ matrix.package }}
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: ${{ matrix.artifact }}-test-reports
+          path: |
+            build/reports/tests/test/
+            build/test-results/test/
+          if-no-files-found: ignore
+          retention-days: 14

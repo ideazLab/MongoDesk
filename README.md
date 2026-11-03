@@ -1,5 +1,7 @@
 # MongoDesk
 
+[![Build desktop applications](https://github.com/ideazLab/MongoDesk/actions/workflows/build.yml/badge.svg)](https://github.com/ideazLab/MongoDesk/actions/workflows/build.yml)
+
 Personal MongoDB desktop workspace built with Kotlin and Compose Desktop. Custom Compose Foundation controls with Doar-inspired colours and compact panels. No Material UI components are used.
 
 ## Run
@@ -158,3 +160,21 @@ MongoDesk uses native AWT/Cocoa menus on macOS and Compose Desktop's window menu
 Menus expose File, Edit, Connection, Database, Collection, Document, View, Backups, and Help. Database actions follow the connection/database selected in the sidebar; collection/document actions follow the active collection tab and selected result. Actions that need a connection, collection, or selected document are disabled when unavailable. Aggregation results remain read-only, and destructive menu commands open the existing confirmation dialogs. There is no separate macOS menu row inside the content area; the app's quick-action toolbar remains available.
 
 Platform shortcuts use Command on macOS and Control elsewhere: N (new connection), K (connections), W (close collection tab), Enter (run query/pipeline), R (refresh), Shift+N (create document), and Shift+D (dashboard). Editing controls keep their normal platform editing shortcuts; the Edit menu forwards editing actions to the focused control.
+
+
+## GitHub Actions builds
+
+The **Build desktop applications** workflow runs on pushes to `main`, version tags (`v*`), pull requests, and manual **Run workflow** requests. Its four jobs build on their native operating systems:
+
+| Target | Runner | Download artifact | Installer |
+| --- | --- | --- | --- |
+| macOS Apple Silicon | `macos-15` | `mongodesk-macos-arm64` | DMG |
+| macOS Intel | `macos-15-intel` | `mongodesk-macos-x64` | DMG |
+| Windows x64 | `windows-2025` | `mongodesk-windows-x64` | MSI |
+| Linux x64 | `ubuntu-24.04` | `mongodesk-linux-x64` | DEB |
+
+Open a completed workflow run under **Actions**, then download the desired installer from **Artifacts**. Packages and test reports are retained for 14 days. Each job installs Java 21, restores the Gradle dependency cache, runs the regression tests, and creates its installer. Test reports are uploaded even if a job fails. Actions are pinned to full commit hashes, and the workflow only requests read access to repository contents.
+
+CI installs official MongoDB Database Tools into the runner's user directory to exercise archive/restore integration tests. Downloads and SHA-256 hashes are pinned in `packaging/database-tools-lock.json`; the installer verifies the checksum before installing. Linux uses Xvfb for desktop-related tests, and Windows configures the runner's WiX 3 tools for JDK 21 MSI packaging.
+
+CI explicitly passes `-PciUnsigned=true` because personal signing identities are not present on hosted runners. CI packages are not Developer ID signed, notarized, or Windows code signed. Normal local macOS builds still require the configured persistent signing identity; the local installer continues to reject ad-hoc builds. No signing secrets are required by this workflow, and it does not create GitHub Releases automatically.

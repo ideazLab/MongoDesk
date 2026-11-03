@@ -1,11 +1,22 @@
 """Install verified official MongoDB Database Tools privately for MongoDesk."""
 from pathlib import Path
-import hashlib, io, json, os, platform, shutil, tarfile, tempfile, urllib.request, zipfile
-root = Path.home()/'.mongodesk'/'tools'
+import argparse, hashlib, io, json, os, platform, tarfile, tempfile, urllib.request, zipfile
+parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument('--manifest', type=Path, help='Use a pinned release manifest instead of the current official release')
+parser.add_argument('--install-dir', type=Path, default=Path.home()/'.mongodesk'/'tools')
+args = parser.parse_args()
+root = args.install_dir
 name = 'macos' if platform.system() == 'Darwin' else 'windows' if platform.system() == 'Windows' else None
+if platform.system() == 'Linux':
+    release_info = dict(line.split('=', 1) for line in Path('/etc/os-release').read_text().splitlines() if '=' in line)
+    if release_info.get('ID', '').strip('"') == 'ubuntu':
+        name = 'ubuntu' + release_info.get('VERSION_ID', '').strip('"').replace('.', '')
 arch = 'arm64' if platform.machine() in ('arm64', 'aarch64') else 'x86_64'
-with urllib.request.urlopen('https://downloads.mongodb.org/tools/db/release.json', timeout=30) as response: metadata=json.load(response)
-release=metadata['versions'][0]
+if args.manifest:
+    release=json.loads(args.manifest.read_text())
+else:
+    with urllib.request.urlopen('https://downloads.mongodb.org/tools/db/release.json', timeout=30) as response: metadata=json.load(response)
+    release=metadata['versions'][0]
 choices=[item for item in release['downloads'] if item['name']==name and item['arch'] in (arch, 'aarch64' if arch=='arm64' else arch)]
 if not choices: raise SystemExit('No matching official tools archive; install MongoDB Database Tools manually.')
 entry=choices[0]['archive']

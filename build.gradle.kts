@@ -6,6 +6,8 @@ plugins {
 }
 group = "com.ideazlab"
 version = "0.1.0"
+// CI packages have no Developer ID certificate. Local builds keep mandatory persistent signing.
+val ciUnsigned = providers.gradleProperty("ciUnsigned").map { it.toBooleanStrict() }.orElse(false)
 kotlin { jvmToolchain(21) }
 dependencies {
     implementation(compose.desktop.currentOs)
@@ -48,14 +50,18 @@ compose.desktop {
 // are signed inside-out with our persistent identity after packaging.
 tasks.matching { it.name == "createDistributable" || it.name == "createReleaseDistributable" }.configureEach {
     inputs.file(project.file("packaging/sign-macos-app.py"))
-    inputs.file(project.file(".signing/macos.properties")).optional()
+    inputs.property("ciUnsigned", ciUnsigned)
+    val signingSettings = project.file(".signing/macos.properties")
+    if (signingSettings.isFile) inputs.file(signingSettings)
     doLast {
-        if (System.getProperty("os.name").startsWith("Mac")) {
+        if (System.getProperty("os.name").startsWith("Mac") && !ciUnsigned.get()) {
             val variant = if (name == "createReleaseDistributable") "main-release" else "main"
             project.exec {
                 commandLine("python3", project.file("packaging/sign-macos-app.py").absolutePath,
                     layout.buildDirectory.dir("compose/binaries/$variant/app/MongoDesk.app").get().asFile.absolutePath)
             }
+        } else if (System.getProperty("os.name").startsWith("Mac")) {
+            logger.lifecycle("CI package: persistent local signing explicitly skipped (-PciUnsigned=true). No Developer ID signing or notarization is performed.")
         }
     }
 }
