@@ -588,7 +588,7 @@ private fun FrameWindowScope.App(exit: () -> Unit) {
             }
             persistTabs()
             notice = if (connectionErrors.isEmpty()) "Restored ${collectionTabs.size} tabs · ${connections.size} connection(s) reconnected."
-                else "${connections.size} connection(s) reconnected · ${connectionErrors.size} failed. Use Connections in the app bar to retry."
+                else "${connections.size} connection(s) reconnected · ${connectionErrors.size} failed. Use Connection → Connections to retry."
             tabError?.let { notice += " Active tab: $it" }
         } catch (e: CancellationException) { throw e }
         catch (e: Exception) { notice = if (e is InputError) e.message.orEmpty() else "Could not restore the workspace." }
@@ -835,11 +835,7 @@ private fun FrameWindowScope.App(exit: () -> Unit) {
                 Row { Label("Mongo", size = 20, bold = true); Label("Desk", Blue, 20, true) }
             }
             Spacer(Modifier.weight(1f)); Label("${connections.size} active connection(s)", Muted, 11)
-            ToolButton("Export", !busy && connections.isNotEmpty()) { databaseTransfer = DatabaseTransferRequest(false, session?.config?.id ?: explorerConnectionId, database, transferContext()) }
-            ToolButton("Import", !busy && connections.isNotEmpty()) { databaseTransfer = DatabaseTransferRequest(true, session?.config?.id ?: explorerConnectionId, database) }
-            BackupToolbar(!busy) { create -> backupManager = BackupManagerRequest(session?.config?.id, database, create) }
-            ThemePicker()
-            ToolButton("Connections", !busy) { showManager = true }
+
         }
         Row(Modifier.weight(1f)) {
             Column(Modifier.width(sidebarWidth.dp).fillMaxHeight().background(AppColors.subtle).padding(12.dp)) {
@@ -847,7 +843,7 @@ private fun FrameWindowScope.App(exit: () -> Unit) {
                 Spacer(Modifier.height(12.dp))
                 Column(Modifier.weight(1f).verticalScroll(rememberScrollState())) {
                     val roots = connections.keys.toList()
-                    if (roots.isEmpty()) Label("No active connections. Use Connections in the app bar to open one.", Muted, 12)
+                    if (roots.isEmpty()) Label("No active connections. Use Connection → Connections to open one.", Muted, 12)
                     roots.forEach { id ->
                         val open = connections[id]
                         val label = open?.session?.config?.name ?: savedConnections.firstOrNull { it.id == id }?.name ?: "Saved connection"

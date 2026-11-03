@@ -11,8 +11,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import androidx.compose.ui.window.Popup
-import androidx.compose.ui.window.PopupProperties
 import kotlinx.coroutines.*
 import java.nio.file.Files
 import java.nio.file.Path
@@ -23,21 +21,6 @@ import javax.swing.JFileChooser
 internal data class BackupManagerRequest(val connectionId: String? = null, val database: String = "", val create: Boolean = false)
 private val backupTimeFormat = DateTimeFormatter.ofPattern("uuuu-MM-dd HH:mm").withResolverStyle(java.time.format.ResolverStyle.STRICT)
 private fun backupTime(millis: Long?, zone: String = ZoneId.systemDefault().id) = millis?.let { Instant.ofEpochMilli(it).atZone(ZoneId.of(zone)).format(backupTimeFormat) } ?: "—"
-
-@Composable
-internal fun BackupToolbar(enabled: Boolean, open: (Boolean) -> Unit) {
-    var expanded by remember { mutableStateOf(false) }
-    Box {
-        ToolButton("Backups ▾", enabled) { expanded = !expanded }
-        if (expanded) Popup(onDismissRequest = { expanded = false }, properties = PopupProperties(focusable = true)) {
-            Column(Modifier.width(240.dp).background(AppColors.surface).border(1.dp, WorkspaceLine).padding(4.dp)) {
-                listOf("Manage schedules…" to false, "Schedule database backup…" to true).forEach { (label, create) ->
-                    Label(label, size = 12, modifier = Modifier.fillMaxWidth().clickable { expanded = false; open(create) }.padding(12.dp))
-                }
-            }
-        }
-    }
-}
 
 @Composable
 internal fun BackupManagerDialog(request: BackupManagerRequest, profiles: ConnectionProfiles, connections: List<OpenConnection>, dismiss: () -> Unit) {

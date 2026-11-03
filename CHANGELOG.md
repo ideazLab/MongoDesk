@@ -6,6 +6,8 @@
 
 ## [1.1.0]
 
+- Moved global toolbar actions into the platform menu bar and Settings.
+
 - Platform-specific Settings and About menus with themed preferences and About/license-notices dialogs.
 
 - Custom dark appearance with persistent Light, Dark, and live Follow system modes.

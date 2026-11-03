@@ -5,14 +5,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.selection.LocalTextSelectionColors
 import androidx.compose.foundation.text.selection.TextSelectionColors
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Popup
-import androidx.compose.ui.window.PopupProperties
 import kotlinx.coroutines.*
 import org.jetbrains.skiko.currentSystemTheme
 import org.jetbrains.skiko.SystemTheme
@@ -106,23 +101,6 @@ internal fun MongoDeskTheme(content: @Composable () -> Unit) {
             content()
             if (error.isNotEmpty()) androidx.compose.ui.window.DialogWindow(onCloseRequest = { error = "" }, title = "Appearance") {
                 Column(Modifier.background(AppColors.surface).padding(24.dp)) { Label(error); Action("Close") { error = "" } }
-            }
-        }
-    }
-}
-
-@Composable
-internal fun ThemePicker() {
-    val control = LocalThemeControl.current
-    var expanded by remember { mutableStateOf(false) }
-    val offset = with(LocalDensity.current) { 34.dp.roundToPx() }
-    Box {
-        ToolButton("Appearance: ${control.mode.label} ▾") { expanded = !expanded }
-        if (expanded) Popup(alignment = Alignment.TopEnd, offset = IntOffset(0, offset), onDismissRequest = { expanded = false }, properties = PopupProperties(focusable = true)) {
-            Column(Modifier.width(180.dp).background(AppColors.surface).border(1.dp, AppColors.line).padding(5.dp)) {
-                ThemeMode.entries.forEach { item ->
-                    ToolButton("${if (control.mode == item) "✓ " else ""}${if (item == ThemeMode.SYSTEM) "Follow system" else item.label}") { expanded = false; control.change(item) }
-                }
             }
         }
     }
