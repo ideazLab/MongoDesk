@@ -38,7 +38,7 @@ try {
         if (-not (Test-Path $link)) { throw "Missing shortcut: $link" }
         if ($shell.CreateShortcut($link).TargetPath -ne $exe) { throw "Shortcut points to the wrong launcher: $link" }
     }
-    Write-Host "Verified MongoDesk $version: installed apps registration, Start menu, desktop shortcut, and executable."
+    Write-Host "Verified MongoDesk ${version}: installed apps registration, Start menu, desktop shortcut, and executable."
 } finally {
     if ($installed) {
         Invoke-Msi "/x `"$msi`" /qn /norestart /L*v `"$($logs.FullName)\uninstall.log`""
