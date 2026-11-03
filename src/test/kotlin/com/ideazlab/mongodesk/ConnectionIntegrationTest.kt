@@ -25,9 +25,18 @@ class ConnectionIntegrationTest {
                 })
                 assertTrue("fixture" in session.databases())
                 assertEquals(listOf("users"), session.collections("fixture"))
+                assertEquals(105L, session.documentCount("fixture", "users", "{}"))
+                assertEquals(52L, session.documentCount("fixture", "users", """{"status":"active"}"""))
+                assertEquals(0L, session.documentCount("fixture", "users", """{"missing":true}"""))
                 val first = session.documents("fixture", "users", "{}", 0)
                 val second = session.documents("fixture", "users", "{}", 1)
                 val last = session.documents("fixture", "users", "{}", 2)
+                val smallPage = session.documents("fixture", "users", "{}", 1, 25)
+                assertEquals(26, smallPage.size)
+                assertEquals(26, smallPage.first()["_id"]!!.asInt32().value)
+                assertEquals(5, session.documents("fixture", "users", "{}", 4, 25).size)
+                assertEquals(105, session.documents("fixture", "users", "{}", 0, 250).size)
+                assertFailsWith<IllegalArgumentException> { session.documents("fixture", "users", "{}", 0, 0) }
                 assertEquals(51, first.size) // One extra row determines whether Next is enabled.
                 assertEquals(51, second.size)
                 assertEquals(5, last.size)

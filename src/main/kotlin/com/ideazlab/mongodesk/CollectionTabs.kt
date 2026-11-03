@@ -64,6 +64,8 @@ internal class CollectionTabState(val ref: CollectionTabRef) {
     val filter = mutableStateOf("{}")
     val appliedFilter = mutableStateOf("{}")
     val page = mutableStateOf(0)
+    val pageSize = mutableStateOf(MongoSession.PAGE_SIZE)
+    val documentCount = mutableStateOf<Long?>(null)
     val hasNext = mutableStateOf(false)
     val pipeline = mutableStateOf("[]")
     val stages = mutableStateOf(listOf(PipelineStage("\$match", "{}")))
@@ -81,6 +83,7 @@ internal class CollectionTabState(val ref: CollectionTabRef) {
         if (documents.value.isNotEmpty()) expandedTree[TreePath(0)] = true
     }
     fun invalidateResults() {
+        documentCount.value = null
         documents.value = emptyList(); selected.value = null; loaded.value = false; hasNext.value = false; page.value = 0; resetTree()
     }
 }

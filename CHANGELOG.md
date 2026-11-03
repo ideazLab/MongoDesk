@@ -6,6 +6,8 @@
 
 ## [1.1.0]
 
+- Clear document pagination controls, result ranges, matching document counts, end-of-results indicators, and per-tab page sizes.
+
 - Windows MSI creates Start menu and desktop shortcuts, with installation and uninstall registration verified in CI.
 
 - MongoDB workspace with multiple saved connections, database/collection tabs, and persistent workspace state.

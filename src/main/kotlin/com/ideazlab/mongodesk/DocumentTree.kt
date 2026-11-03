@@ -177,3 +177,21 @@ internal fun DocumentTreeView(documents: List<BsonDocument>, selected: Int?, ena
         }
     }
 }
+
+@Composable
+internal fun PageSizePicker(size: Int, enabled: Boolean, changed: (Int) -> Unit) {
+    var expanded by remember { mutableStateOf(false) }
+    val offset = with(LocalDensity.current) { 34.dp.roundToPx() }
+    Box {
+        ToolButton("$size per page ▾", enabled) { expanded = !expanded }
+        if (expanded) Popup(alignment = Alignment.TopEnd, offset = IntOffset(0, offset), onDismissRequest = { expanded = false }, properties = PopupProperties(focusable = true)) {
+            Column(Modifier.width(150.dp).background(Color.White).border(1.dp, WorkspaceLine).padding(5.dp)) {
+                MongoSession.PAGE_SIZES.forEach { item ->
+                    Box(Modifier.fillMaxWidth().clickable(role = Role.Button) { expanded = false; if (item != size) changed(item) }.padding(10.dp)) {
+                        Label("${if (item == size) "✓ " else ""}$item per page", if (item == size) WorkspaceBlue else Color(0xFF1B2E4B), 12)
+                    }
+                }
+            }
+        }
+    }
+}

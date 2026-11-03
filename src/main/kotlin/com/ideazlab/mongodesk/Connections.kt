@@ -248,13 +248,18 @@ class MongoSession private constructor(val client: MongoClient, private val tunn
             .maxTime(10, TimeUnit.SECONDS).toList().map { it.getString("name").value }.sorted()
     }
     suspend fun collections(database: String) = client.getDatabase(database).listCollectionNames().toList().sorted()
-    suspend fun documents(database: String, collection: String, filter: String, page: Int): List<BsonDocument> {
+    suspend fun documents(database: String, collection: String, filter: String, page: Int, pageSize: Int = PAGE_SIZE): List<BsonDocument> {
         val parsed = parseFilter(filter)
         require(page >= 0)
+        require(pageSize in PAGE_SIZES)
         return client.getDatabase(database).getCollection<BsonDocument>(collection)
-            .find(parsed).sort(BsonDocument("_id", BsonInt32(1))).skip(Math.multiplyExact(page, PAGE_SIZE))
-            .limit(PAGE_SIZE + 1).maxTime(10, TimeUnit.SECONDS).toList()
+            .find(parsed).sort(BsonDocument("_id", BsonInt32(1))).skip(Math.multiplyExact(page, pageSize))
+            .limit(pageSize + 1).maxTime(10, TimeUnit.SECONDS).toList()
     }
+    suspend fun documentCount(database: String, collection: String, filter: String): Long =
+        client.getDatabase(database).getCollection<BsonDocument>(collection).countDocuments(parseFilter(filter),
+            com.mongodb.client.model.CountOptions().maxTime(10, TimeUnit.SECONDS))
+
     suspend fun insertDocument(database: String, collection: String, document: BsonDocument): BsonDocument {
         val validated = parseNewDocument(document.pretty())
         val target = client.getDatabase(database).getCollection<BsonDocument>(collection)
@@ -288,22 +293,24 @@ class MongoSession private constructor(val client: MongoClient, private val tunn
         catch (e: DocumentConflictError) { throw e }
         catch (e: Exception) { throw DocumentUpdateError(e) }
     }
-    suspend fun aggregate(database: String, collection: String, pipeline: List<BsonDocument>, page: Int): List<BsonDocument> {
+    suspend fun aggregate(database: String, collection: String, pipeline: List<BsonDocument>, page: Int, pageSize: Int = PAGE_SIZE): List<BsonDocument> {
         validatePipeline(pipeline)
         require(page >= 0)
+        require(pageSize in PAGE_SIZES)
         val paged = pipeline + listOf(
-            BsonDocument("\$skip", BsonInt32(Math.multiplyExact(page, PAGE_SIZE))),
-            BsonDocument("\$limit", BsonInt32(PAGE_SIZE + 1))
+            BsonDocument("\$skip", BsonInt32(Math.multiplyExact(page, pageSize))),
+            BsonDocument("\$limit", BsonInt32(pageSize + 1))
         )
         try {
             return client.getDatabase(database).getCollection<BsonDocument>(collection)
-                .aggregate<BsonDocument>(paged).batchSize(PAGE_SIZE + 1).maxTime(30, TimeUnit.SECONDS).toList()
+                .aggregate<BsonDocument>(paged).batchSize(pageSize + 1).maxTime(30, TimeUnit.SECONDS).toList()
         } catch (e: kotlinx.coroutines.CancellationException) { throw e }
         catch (e: Exception) { throw AggregationRunError(e) }
     }
     override fun close() { runCatching { client.close() }; tunnel?.close() }
     companion object {
         const val PAGE_SIZE = 50
+        val PAGE_SIZES = listOf(25, 50, 100, 250, 500)
         // Test and Connect deliberately use this same path, including explorer initialization.
         suspend fun openWorkspace(config: ConnectionConfig, progress: (String) -> Unit = {}): ConnectedWorkspace {
             val session = connect(config, progress)

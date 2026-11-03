@@ -523,28 +523,38 @@ private fun FrameWindowScope.App(exit: () -> Unit) {
         catch (e: Exception) { connectionErrors[id] = connectionError(e); throw e }
         finally { reconnecting.remove(id) }
     }
-    suspend fun loadDocuments(target: CollectionTabState, targetPage: Int, targetFilter: String) {
+    suspend fun loadDocuments(target: CollectionTabState, targetPage: Int, targetFilter: String, size: Int = target.pageSize.value) {
         val ref = target.ref
         val active = connections[ref.connectionId] ?: throw InputError("Reconnect this tab's connection first.")
-        val rows = active.session.documents(ref.database, ref.collection, targetFilter, targetPage)
-        target.documents.value = rows.take(MongoSession.PAGE_SIZE); target.resetTree(); target.loaded.value = true
-        target.hasNext.value = rows.size > MongoSession.PAGE_SIZE; target.page.value = targetPage
+        val rows = active.session.documents(ref.database, ref.collection, targetFilter, targetPage, size)
+        target.documents.value = rows.take(size); target.resetTree(); target.loaded.value = true
+        target.hasNext.value = rows.size > size; target.page.value = targetPage; target.pageSize.value = size
         target.appliedFilter.value = targetFilter; target.selected.value = null; target.resultMode.value = "Documents"
+        target.documentCount.value = null
+        target.documentCount.value = try { active.session.documentCount(ref.database, ref.collection, targetFilter) }
+            catch (e: CancellationException) { throw e }
+            catch (_: Exception) { null } // Counting can require permissions or more time than fetching a page.
         notice = "${target.documents.value.size} documents · ${active.session.config.name} › ${ref.database}.${ref.collection} · Page ${targetPage + 1}"
     }
-    suspend fun loadAggregation(target: CollectionTabState, targetPage: Int, stages: List<BsonDocument>) {
+    suspend fun loadAggregation(target: CollectionTabState, targetPage: Int, stages: List<BsonDocument>, size: Int = target.pageSize.value) {
         val ref = target.ref
         val active = connections[ref.connectionId] ?: throw InputError("Reconnect this tab's connection first.")
         val started = System.nanoTime()
-        val rows = active.session.aggregate(ref.database, ref.collection, stages, targetPage)
-        target.documents.value = rows.take(MongoSession.PAGE_SIZE); target.resetTree(); target.loaded.value = true
-        target.hasNext.value = rows.size > MongoSession.PAGE_SIZE; target.page.value = targetPage
+        val rows = active.session.aggregate(ref.database, ref.collection, stages, targetPage, size)
+        target.documents.value = rows.take(size); target.resetTree(); target.loaded.value = true
+        target.hasNext.value = rows.size > size; target.page.value = targetPage; target.pageSize.value = size
+        target.documentCount.value = null
         target.selected.value = null; target.appliedPipeline.value = stages; target.resultMode.value = "Aggregation"
         notice = "Aggregation · ${stages.size} stages · ${target.documents.value.size} results · ${(System.nanoTime() - started) / 1_000_000} ms"
     }
-    suspend fun refreshResults(target: CollectionTabState = currentTab, targetPage: Int = target.page.value) {
-        if (target.resultMode.value == "Aggregation") loadAggregation(target, targetPage, target.appliedPipeline.value)
-        else loadDocuments(target, targetPage, target.appliedFilter.value)
+    suspend fun refreshResults(target: CollectionTabState = currentTab, targetPage: Int = target.page.value, size: Int = target.pageSize.value) {
+        if (target.resultMode.value == "Aggregation") loadAggregation(target, targetPage, target.appliedPipeline.value, size)
+        else loadDocuments(target, targetPage, target.appliedFilter.value, size)
+        // A deletion or external change can remove the final page. Return to a valid page.
+        if (targetPage > 0 && target.documents.value.isEmpty()) {
+            if (target.resultMode.value == "Aggregation") loadAggregation(target, 0, target.appliedPipeline.value, size)
+            else loadDocuments(target, 0, target.appliedFilter.value, size)
+        }
     }
     suspend fun activate(target: CollectionTabState, revealInSidebar: Boolean = true) {
         activeTabId = target.ref.id; explorerConnectionId = target.ref.connectionId; menuNamespace = target.ref.connectionId to target.ref.database; persistTabs()
@@ -991,9 +1001,6 @@ private fun FrameWindowScope.App(exit: () -> Unit) {
                         Row(Modifier.fillMaxWidth().background(Pale).horizontalScroll(rememberScrollState()).padding(7.dp), horizontalArrangement = Arrangement.spacedBy(7.dp), verticalAlignment = Alignment.CenterVertically) {
                             Label(if (resultMode == "Aggregation") "PIPELINE RESULTS" else "DOCUMENTS", Muted, 10, true)
                             ToolButton("Refresh", !busy && session != null && resultsLoaded) { operation { refreshResults() } }
-                            ToolButton("‹", !busy && session != null && page > 0) { operation { refreshResults(targetPage = page - 1) } }
-                            Label("Page ${page + 1} · ${documents.size} rows", Muted, 11)
-                            ToolButton("›", !busy && session != null && hasNext) { operation { refreshResults(targetPage = page + 1) } }
                             if (resultMode != "Aggregation") ToolButton("+ Document", !busy && session != null) { newDocumentTarget = DocumentCollectionTarget(session!!, database, collection) }
                             ToolButton("Inspect", !busy && selected != null) { selected?.let { inspectDocument(it) } }
                             if (resultMode != "Aggregation") {
@@ -1003,15 +1010,37 @@ private fun FrameWindowScope.App(exit: () -> Unit) {
                             ToolButton("Export", !busy && session != null) { databaseTransfer = DatabaseTransferRequest(false, currentTab.ref.connectionId, database, transferContext(), if (resultsLoaded) DatabaseExportSource.QUERY else DatabaseExportSource.COLLECTION) }
                             DocumentViewPicker(documentView, !busy) { documentView = it; persistTabs() }
                         }
+                        Row(Modifier.fillMaxWidth().background(Pale).horizontalScroll(rememberScrollState()).padding(7.dp), horizontalArrangement = Arrangement.spacedBy(7.dp), verticalAlignment = Alignment.CenterVertically) {
+                            val canPage = !busy && session != null && resultsLoaded
+                            ToolButton("|‹ First", canPage && page > 0) { operation { refreshResults(targetPage = 0) } }
+                            ToolButton("‹ Previous", canPage && page > 0) { operation { refreshResults(targetPage = page - 1) } }
+                            Label(if (!resultsLoaded) "No results loaded" else if (documents.isEmpty()) "Page ${page + 1} · No documents" else "Page ${page + 1} · Documents ${page.toLong() * currentTab.pageSize.value + 1}–${page.toLong() * currentTab.pageSize.value + documents.size}", Muted, 11)
+                            ToolButton("Next ›", canPage && hasNext) { operation { refreshResults(targetPage = page + 1) } }
+                            if (resultsLoaded && !hasNext) Label("End of results", Muted, 11)
+                            PageSizePicker(currentTab.pageSize.value, !busy && session != null) { size ->
+                                if (resultsLoaded) operation { refreshResults(targetPage = 0, size = size) }
+                                else { currentTab.pageSize.value = size; page = 0 }
+                            }
+                        }
                         val emptyResults = if (session == null) "Select Reconnect to open this collection's connection." else if (resultsLoaded) "No matching documents." else "Run ${if (tab == "Aggregation") "a pipeline" else "a query"} to see results."
-                        if (documentView == DocumentView.TREE) DocumentTreeView(documents, selected, !busy, emptyResults,
-                            currentTab.expandedTree, currentTab.selectedTreePath.value, { currentTab.selectedTreePath.value = it },
-                            select = { selected = it }, inspect = { inspectDocument(it) }, contextMenu = { index, path -> resultContextMenu(index, path) }, modifier = Modifier.weight(1f).fillMaxWidth())
-                        else DenseDocumentGrid(documents, selected, documentView == DocumentView.JSON, !busy, emptyResults,
-                            select = { selected = it }, inspect = { inspectDocument(it) }, contextMenu = { index, path -> resultContextMenu(index, path) }, modifier = Modifier.weight(1f).fillMaxWidth())
+                        key(page, currentTab.pageSize.value, currentTab.appliedFilter.value, currentTab.appliedPipeline.value) {
+                            if (documentView == DocumentView.TREE) DocumentTreeView(documents, selected, !busy, emptyResults,
+                                currentTab.expandedTree, currentTab.selectedTreePath.value, { currentTab.selectedTreePath.value = it },
+                                select = { selected = it }, inspect = { inspectDocument(it) }, contextMenu = { index, path -> resultContextMenu(index, path) }, modifier = Modifier.weight(1f).fillMaxWidth())
+                            else DenseDocumentGrid(documents, selected, documentView == DocumentView.JSON, !busy, emptyResults,
+                                select = { selected = it }, inspect = { inspectDocument(it) }, contextMenu = { index, path -> resultContextMenu(index, path) }, modifier = Modifier.weight(1f).fillMaxWidth())
+                        }
                         Row(Modifier.fillMaxWidth().border(1.dp, Line).padding(horizontal = 10.dp, vertical = 6.dp)) {
                             Label(if (selected != null) "1 document selected · Double-click to inspect" else "Select a document · Double-click to inspect", Muted, 11)
-                            Spacer(Modifier.weight(1f)); Label(if (resultMode == "Aggregation") "Read-only results" else "50 per page", Muted, 11)
+                            Spacer(Modifier.weight(1f))
+                            val count = currentTab.documentCount.value
+                            Label(when {
+                                resultMode == "Aggregation" -> "Read-only results · ${documents.size} on this page"
+                                !resultsLoaded -> "Run a query to count documents"
+                                count == null -> "${documents.size} on this page · Total unavailable"
+                                documents.isEmpty() -> "$count matching documents"
+                                else -> "Documents ${page.toLong() * currentTab.pageSize.value + 1}–${page.toLong() * currentTab.pageSize.value + documents.size} of $count · ${currentTab.pageSize.value} per page"
+                            }, Muted, 11)
                         }
                     }
                 }
