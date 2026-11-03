@@ -1,0 +1,24 @@
+.gradle/
+.kotlin/
+build/
+.idea/
+*.iml
+.DS_Store
+
+# Machine-local signing metadata. Private keys live only in Keychain.
+.signing/
+
+# Local runtime data, credentials, and generated files.
+__pycache__/
+*.py[cod]
+.env
+.env.*
+!.env.example
+local.properties
+.mongodesk/
+*.log
+*.archive
+*.archive.gz
+*.pem
+*.p12
+*.pfx
