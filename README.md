@@ -192,3 +192,7 @@ The repository update-signing secret is configured; only its public key is commi
 ### Appearance
 
 Choose **Appearance: System** in the app bar or **View → Appearance** to select Light, Dark, or Follow system. The setting is saved in `~/.mongodesk/appearance.txt`. System mode checks the OS appearance while the app is open; Linux also checks the GNOME/GSettings colour preference when available. Desktops that expose no supported preference use light until an explicit theme is selected. The custom palette applies to the workspace, editors, tables, tree view, menus, and dialogs; native window decorations and file pickers follow the OS.
+
+### Settings and About
+
+macOS uses the native **MongoDesk → Settings…** (⌘,) and **MongoDesk → About MongoDesk** application-menu entries, retaining Services, Hide and Quit. Windows and Linux use **File → Settings…** (Ctrl+,) and **Help → About MongoDesk** in the application window. macOS Help contains the project website rather than duplicating About. Settings has searchable navigation for Appearance, Keyboard shortcuts and Storage. Theme edits are applied with Apply/OK; Cancel discards unapplied changes. About shows the theme-aware logo, build version, runtime details and a License and notices tab.

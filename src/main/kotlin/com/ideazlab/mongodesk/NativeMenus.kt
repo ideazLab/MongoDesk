@@ -15,7 +15,7 @@ import java.awt.EventQueue
 import java.awt.event.KeyEvent
 
 internal enum class AppCommand {
-    NEW_CONNECTION, CONNECTIONS, CLOSE_TAB, EXIT, ABOUT,
+    NEW_CONNECTION, CONNECTIONS, CLOSE_TAB, EXIT, ABOUT, SETTINGS, PROJECT_WEBSITE,
     DISCONNECT, SERVER_STATUS, BUILD_INFO, EXPORT_SERVER, IMPORT_SERVER,
     CREATE_DATABASE, EXPORT_DATABASE, IMPORT_DATABASE, DROP_DATABASE, CREATE_COLLECTION,
     EXPORT_COLLECTION, EXPORT_QUERY, IMPORT_COLLECTION, DROP_COLLECTION,
@@ -87,7 +87,11 @@ private fun MenuScope.NativeMenuContents(section: AppMenuSection, state: NativeM
             Item("Connections…", enabled = state.available, shortcut = shortcut(Key.K)) { action(AppCommand.CONNECTIONS) }
             Separator()
             Item("Close collection tab", enabled = state.available && !state.dashboard, shortcut = shortcut(Key.W)) { action(AppCommand.CLOSE_TAB) }
-            if (!isMacDesktop) { Separator(); Item("Exit", shortcut = shortcut(Key.Q)) { action(AppCommand.EXIT) } }
+            if (!isMacDesktop) {
+                Separator()
+                Item("Settings…", enabled = state.available, shortcut = shortcut(Key.Comma)) { action(AppCommand.SETTINGS) }
+                Separator(); Item("Exit", shortcut = shortcut(Key.Q)) { action(AppCommand.EXIT) }
+            }
                 }
         AppMenuSection.EDIT -> {
             // Text controls retain their own platform shortcuts; menu clicks dispatch to the focused control.
@@ -164,7 +168,8 @@ private fun MenuScope.NativeMenuContents(section: AppMenuSection, state: NativeM
             Item("Schedule database backup…", enabled = state.available) { action(AppCommand.BACKUP_SCHEDULE) }
                 }
         AppMenuSection.HELP -> {
-            Item("About MongoDesk", enabled = state.available) { action(AppCommand.ABOUT) }
+            Item("MongoDesk on GitHub") { action(AppCommand.PROJECT_WEBSITE) }
+            if (!isMacDesktop) { Separator(); Item("About MongoDesk", enabled = state.available) { action(AppCommand.ABOUT) } }
                 }
     }
 }
@@ -181,31 +186,21 @@ internal fun FrameWindowScope.sendEditorCommand(command: AppCommand) {
 }
 
 @Composable
-internal fun NativeApplicationHandlers(about: () -> Unit, quit: () -> Unit) {
+internal fun NativeApplicationHandlers(about: () -> Unit, settings: () -> Unit, quit: () -> Unit) {
     val currentAbout by rememberUpdatedState(about)
     val currentQuit by rememberUpdatedState(quit)
+    val currentSettings by rememberUpdatedState(settings)
     DisposableEffect(Unit) {
-        val desktop = if (Desktop.isDesktopSupported()) Desktop.getDesktop() else null
+        val desktop = if (isMacDesktop && Desktop.isDesktopSupported()) Desktop.getDesktop() else null
         if (desktop?.isSupported(Desktop.Action.APP_ABOUT) == true) desktop.setAboutHandler { EventQueue.invokeLater { currentAbout() } }
+        if (desktop?.isSupported(Desktop.Action.APP_PREFERENCES) == true) desktop.setPreferencesHandler { EventQueue.invokeLater { currentSettings() } }
         if (desktop?.isSupported(Desktop.Action.APP_QUIT_HANDLER) == true) desktop.setQuitHandler { _, response ->
             EventQueue.invokeLater { currentQuit() }; response.cancelQuit()
         }
         onDispose {
             if (desktop?.isSupported(Desktop.Action.APP_ABOUT) == true) desktop.setAboutHandler(null)
+            if (desktop?.isSupported(Desktop.Action.APP_PREFERENCES) == true) desktop.setPreferencesHandler(null)
             if (desktop?.isSupported(Desktop.Action.APP_QUIT_HANDLER) == true) desktop.setQuitHandler(null)
-        }
-    }
-}
-
-@Composable
-internal fun AboutMongoDeskDialog(dismiss: () -> Unit) {
-    Dialog(onDismissRequest = dismiss, properties = DialogProperties(dismissOnClickOutside = false)) {
-        Column(Modifier.width(440.dp).background(AppColors.surface).border(1.dp, WorkspaceLine).padding(24.dp)) {
-            androidx.compose.foundation.Image(mongoDeskIcon(), "MongoDesk icon", Modifier.size(64.dp))
-            Spacer(Modifier.height(12.dp)); Label("MongoDesk", size = 25, bold = true)
-            Spacer(Modifier.height(6.dp)); Label("Version ${AppBuild.version} · Ideazlab", size = 12)
-            Spacer(Modifier.height(12.dp)); Label("A MongoDB desktop workspace for browsing documents, queries, aggregations, and database backups.", size = 13)
-            Spacer(Modifier.height(18.dp)); ToolButton("Close") { dismiss() }
         }
     }
 }

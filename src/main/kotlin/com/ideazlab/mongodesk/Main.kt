@@ -420,6 +420,7 @@ private fun FrameWindowScope.App(exit: () -> Unit) {
     var explorerConnectionId by remember { mutableStateOf<String?>(null) }
     var menuNamespace by remember { mutableStateOf<Pair<String, String>?>(null) }
     var showAbout by remember { mutableStateOf(false) }
+    var showSettings by remember { mutableStateOf(false) }
     var tabsReady by remember { mutableStateOf(false) }
     val scratch = remember { CollectionTabState(CollectionTabRef(connectionId = "", database = "", collection = "")) }
     val currentTab = collectionTabs.firstOrNull { it.ref.id == activeTabId } ?: scratch
@@ -470,7 +471,7 @@ private fun FrameWindowScope.App(exit: () -> Unit) {
     var loadingMessage by remember { mutableStateOf("Loading…") }
     var runningJob by remember { mutableStateOf<Job?>(null) }
     var notice by remember { mutableStateOf("Open a connection to browse your data.") }
-    val navigationEnabled = !busy && !showAbout && !showManager && !showWizard && !showConnection && backupManager == null && fieldEditTarget == null && dropTarget == null && createCollectionTarget == null && createDatabaseTarget == null && serverInfoTarget == null && databaseTransfer == null && inspection == null && editTarget == null && newDocumentTarget == null && deleteTarget == null
+    val navigationEnabled = !busy && !showAbout && !showSettings && !showManager && !showWizard && !showConnection && backupManager == null && fieldEditTarget == null && dropTarget == null && createCollectionTarget == null && createDatabaseTarget == null && serverInfoTarget == null && databaseTransfer == null && inspection == null && editTarget == null && newDocumentTarget == null && deleteTarget == null
     val scope = rememberCoroutineScope()
     LaunchedEffect(showConnection, showManager, showWizard, dashboard) {
         try {
@@ -782,8 +783,9 @@ private fun FrameWindowScope.App(exit: () -> Unit) {
     val menuDatabase = if (menuNamespace?.first == menuOpen?.session?.config?.id) menuNamespace?.second.orEmpty() else database
     val hasCollection = !dashboard && session != null && collection.isNotBlank()
     val hasDocument = hasCollection && selected?.let { documents.getOrNull(it) } != null
-    NativeApplicationHandlers(about = { if (navigationEnabled) showAbout = true }, quit = exit)
+    NativeApplicationHandlers(about = { if (navigationEnabled) showAbout = true }, settings = { if (navigationEnabled) showSettings = true }, quit = exit)
     if (showAbout) AboutMongoDeskDialog { showAbout = false }
+    if (showSettings) SettingsDialog { showSettings = false }
     MongoDeskMenuBar(NativeMenuState(navigationEnabled, menuOpen != null, menuOpen != null && menuDatabase.isNotBlank(),
         hasCollection, hasDocument, resultMode != "Aggregation", resultsLoaded, dashboard, documentView, menuDatabase, menuOpen?.session?.config?.name.orEmpty())) { command ->
         when (command) {
@@ -792,6 +794,8 @@ private fun FrameWindowScope.App(exit: () -> Unit) {
             AppCommand.CLOSE_TAB -> if (!dashboard) closeTab(currentTab)
             AppCommand.EXIT -> exit()
             AppCommand.ABOUT -> showAbout = true
+            AppCommand.SETTINGS -> showSettings = true
+            AppCommand.PROJECT_WEBSITE -> runCatching { java.awt.Desktop.getDesktop().browse(java.net.URI("https://github.com/${AppBuild.repository}")) }.onFailure { notice = "Could not open the project website." }.let { }
             AppCommand.DISCONNECT -> menuOpen?.session?.config?.id?.let { disconnect(it); menuNamespace = null }
             AppCommand.SERVER_STATUS -> menuOpen?.let { serverInfoTarget = ServerInfoTarget(it.session, ServerInfoKind.STATUS) }
             AppCommand.BUILD_INFO -> menuOpen?.let { serverInfoTarget = ServerInfoTarget(it.session, ServerInfoKind.BUILD) }

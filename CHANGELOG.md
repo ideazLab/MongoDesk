@@ -6,6 +6,8 @@
 
 ## [1.1.0]
 
+- Platform-specific Settings and About menus with themed preferences and About/license-notices dialogs.
+
 - Custom dark appearance with persistent Light, Dark, and live Follow system modes.
 
 - Clear document pagination controls, result ranges, matching document counts, end-of-results indicators, and per-tab page sizes.
