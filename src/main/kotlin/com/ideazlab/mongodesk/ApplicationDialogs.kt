@@ -100,22 +100,24 @@ internal fun AboutMongoDeskDialog(dismiss: () -> Unit) {
                 ToolButton("License and notices", primary = notices) { notices = true }
             }
             Spacer(Modifier.height(14.dp))
-            if (!notices) Column(Modifier.weight(1f).fillMaxWidth().border(1.dp, AppColors.line).padding(24.dp).verticalScroll(rememberScrollState()),
-                horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
-                Image(mongoDeskIcon(), "MongoDesk logo", Modifier.size(150.dp))
-                Spacer(Modifier.height(16.dp)); Label("MongoDesk", size = 29, bold = true)
-                Spacer(Modifier.height(8.dp)); Label("Version ${AppBuild.version} · Ideazlab", size = 14)
-                Spacer(Modifier.height(16.dp)); Label("A desktop workspace for MongoDB documents, queries, aggregations and backups.", AppColors.muted, 13)
-                Spacer(Modifier.height(16.dp)); Label("${System.getProperty("os.name")} · ${System.getProperty("os.arch")} · Java ${System.getProperty("java.version")}", AppColors.muted, 11)
-                Spacer(Modifier.height(8.dp)); SelectionContainer { Label("github.com/${AppBuild.repository}", AppColors.blue, 12) }
-            } else SelectionContainer {
-                Column(Modifier.weight(1f).fillMaxWidth().border(1.dp, AppColors.line).padding(24.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                    Label("MongoDesk", size = 20, bold = true)
-                    Label("No project license has been added to this build. See the project repository for current licensing information.")
-                    Label("Third-party components", size = 15, bold = true)
-                    Label("MongoDesk is built with Kotlin, Compose Multiplatform, Skiko, the MongoDB Java/Kotlin driver, Kotlin coroutines, SSHJ, JNA and SLF4J. Each component remains subject to its own license.")
-                    Label("MongoDB Database Tools are distributed by MongoDB. Their license files are retained when installed by MongoDesk’s tools installer.")
-                    Label("The project repository contains source, build instructions and release information. MongoDesk is an independent application.", AppColors.muted, 12)
+            Box(Modifier.weight(1f).fillMaxWidth().border(1.dp, AppColors.line).padding(24.dp)) {
+                if (!notices) Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
+                    horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+                    Image(mongoDeskIcon(), "MongoDesk logo", Modifier.size(150.dp))
+                    Spacer(Modifier.height(16.dp)); Label("MongoDesk", size = 29, bold = true)
+                    Spacer(Modifier.height(8.dp)); Label("Version ${AppBuild.version} · Ideazlab", size = 14)
+                    Spacer(Modifier.height(16.dp)); Label("A desktop workspace for MongoDB documents, queries, aggregations and backups.", AppColors.muted, 13)
+                    Spacer(Modifier.height(16.dp)); Label("${System.getProperty("os.name")} · ${System.getProperty("os.arch")} · Java ${System.getProperty("java.version")}", AppColors.muted, 11)
+                    Spacer(Modifier.height(8.dp)); SelectionContainer { Label("github.com/${AppBuild.repository}", AppColors.blue, 12) }
+                } else SelectionContainer(Modifier.fillMaxSize()) {
+                    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                        Label("MongoDesk", size = 20, bold = true)
+                        Label("No project license has been added to this build. See the project repository for current licensing information.")
+                        Label("Third-party components", size = 15, bold = true)
+                        Label("MongoDesk is built with Kotlin, Compose Multiplatform, Skiko, the MongoDB Java/Kotlin driver, Kotlin coroutines, SSHJ, JNA and SLF4J. Each component remains subject to its own license.")
+                        Label("MongoDB Database Tools are distributed by MongoDB. Their license files are retained when installed by MongoDesk’s tools installer.")
+                        Label("The project repository contains source, build instructions and release information. MongoDesk is an independent application.", AppColors.muted, 12)
+                    }
                 }
             }
             Spacer(Modifier.height(16.dp))
