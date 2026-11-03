@@ -6,6 +6,8 @@
 
 ## [1.1.0]
 
+- Windows MSI creates Start menu and desktop shortcuts, with installation and uninstall registration verified in CI.
+
 - MongoDB workspace with multiple saved connections, database/collection tabs, and persistent workspace state.
 - Table, tree, and JSON document views with reviewed document and nested-field mutations.
 - Query execution, aggregation building, and saved pipelines.

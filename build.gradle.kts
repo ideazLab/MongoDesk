@@ -51,6 +51,12 @@ compose.desktop {
             vendor = "Ideazlab"
             includeAllModules = true
             windows {
+                // Install for all users and expose the native Windows launch entry points.
+                perUserInstall = false
+                menu = true
+                menuGroup = "MongoDesk"
+                shortcut = true
+                dirChooser = true
                 iconFile.set(project.file("packaging/icons/MongoDesk.ico"))
                 // Stable across releases so future MSI packages upgrade the existing installation.
                 upgradeUuid = "9c75d5db-8838-5331-aeb9-6c5d0d9a91ed"

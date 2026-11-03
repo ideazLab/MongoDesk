@@ -115,6 +115,9 @@ The signing key remains in Keychain for build-time codesign use. Connection deta
 
 Run `./gradlew packageDistributionForCurrentOS` with JDK 21. DMG, MSI and DEB targets are configured; build each installer on its respective operating system. Local macOS app signing is configured as described below. Apple Developer ID signing, notarization and public distribution are not configured.
 
+On Windows, run the downloaded `.msi` installer (administrator approval required). It installs MongoDesk for all users under `C:\Program Files\MongoDesk`, registers it in **Installed apps / Programs and Features**, and creates **Start → MongoDesk → MongoDesk** and desktop shortcuts. Running or copying `MongoDesk.exe` from an application image does not install or register it. CI installs the MSI on a clean Windows runner and checks registration, both shortcut targets, and uninstall cleanup before uploading the installer.
+
+
 ## Implementation references
 
 - [MongoDB Kotlin coroutine driver](https://www.mongodb.com/docs/drivers/kotlin/coroutine/current/getting-started/)
