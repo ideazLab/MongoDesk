@@ -196,7 +196,7 @@ internal fun AboutMongoDeskDialog(dismiss: () -> Unit) {
         Column(Modifier.width(440.dp).background(Color.White).border(1.dp, WorkspaceLine).padding(24.dp)) {
             androidx.compose.foundation.Image(mongoDeskIcon(), "MongoDesk icon", Modifier.size(64.dp))
             Spacer(Modifier.height(12.dp)); Label("MongoDesk", size = 25, bold = true)
-            Spacer(Modifier.height(6.dp)); Label("Version 0.1.0 · Ideazlab", size = 12)
+            Spacer(Modifier.height(6.dp)); Label("Version ${AppBuild.version} · Ideazlab", size = 12)
             Spacer(Modifier.height(12.dp)); Label("A MongoDB desktop workspace for browsing documents, queries, aggregations, and database backups.", size = 13)
             Spacer(Modifier.height(18.dp)); ToolButton("Close") { dismiss() }
         }

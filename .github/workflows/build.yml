@@ -15,7 +15,32 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  validate:
+    name: Validate version and release policy
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - name: Check out source and tag history
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Test release tooling
+        run: python -m unittest discover -s packaging/tests -v
+      - name: Validate shared version, changelog, and release tag
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ "$GITHUB_REF_TYPE" = tag ]; then
+            python packaging/release.py validate --tag "$GITHUB_REF_NAME" --require-main-ci
+          else
+            python packaging/release.py validate
+          fi
+
   build:
+    needs: validate
     name: ${{ matrix.name }}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 45
@@ -58,6 +83,7 @@ jobs:
           cache-dependency-path: |
             **/*.gradle*
             gradle/wrapper/gradle-wrapper.properties
+            VERSION
 
       - name: Install Linux packaging and display dependencies
         if: runner.os == 'Linux'
@@ -93,11 +119,14 @@ jobs:
         if: runner.os == 'Linux'
         run: xvfb-run --auto-servernum ./gradlew --no-daemon --stacktrace build ${{ matrix.task }} -PciUnsigned=true
 
+      - name: Stage versioned installer
+        run: python packaging/release.py stage --artifact "${{ matrix.artifact }}" --package-glob "${{ matrix.package }}" --output release-assets
+
       - name: Upload application installer
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: ${{ matrix.artifact }}
-          path: ${{ matrix.package }}
+          path: release-assets/*
           if-no-files-found: error
           retention-days: 14
 
@@ -111,3 +140,53 @@ jobs:
             build/test-results/test/
           if-no-files-found: ignore
           retention-days: 14
+
+
+  draft-release:
+    name: Prepare draft GitHub Release
+    needs: [validate, build]
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+      actions: read
+    steps:
+      - name: Check out the tagged source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Download mongodesk-macos-arm64
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: mongodesk-macos-arm64
+          path: release-assets
+
+      - name: Download mongodesk-macos-x64
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: mongodesk-macos-x64
+          path: release-assets
+
+      - name: Download mongodesk-windows-x64
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: mongodesk-windows-x64
+          path: release-assets
+
+      - name: Download mongodesk-linux-x64
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: mongodesk-linux-x64
+          path: release-assets
+
+      - name: Sign update metadata and create checksums
+        env:
+          MONGODESK_UPDATE_SIGNING_KEY: ${{ secrets.MONGODESK_UPDATE_SIGNING_KEY }}
+        run: python packaging/release.py manifest --assets release-assets --tag "$GITHUB_REF_NAME"
+
+      - name: Create or refresh draft release only
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python packaging/release.py draft --assets release-assets --tag "$GITHUB_REF_NAME"

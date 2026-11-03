@@ -22,3 +22,7 @@ local.properties
 *.pem
 *.p12
 *.pfx
+
+# Public update-verification key is intentionally tracked; private key stays in .signing/.
+!packaging/update-public-key.pem
+release-assets/

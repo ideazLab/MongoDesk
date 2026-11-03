@@ -5,7 +5,22 @@ plugins {
     id("org.jetbrains.kotlin.plugin.compose") version "2.2.20"
 }
 group = "com.ideazlab"
-version = "0.1.0"
+val appVersion = file("VERSION").readText().trim()
+require(appVersion.matches(Regex("[0-9]+\\.[0-9]+\\.[0-9]+"))) { "VERSION must contain a stable three-part version." }
+version = appVersion
+val generatedVersionResources = layout.buildDirectory.dir("generated/version-resources")
+val generateAppVersion by tasks.registering {
+    inputs.file(file("VERSION"))
+    outputs.dir(generatedVersionResources)
+    doLast {
+        generatedVersionResources.get().file("build-info.properties").asFile.apply {
+            parentFile.mkdirs()
+            writeText("version=$appVersion\nrepository=ideazLab/MongoDesk\n")
+        }
+    }
+}
+sourceSets.main { resources.srcDir(generatedVersionResources) }
+tasks.named("processResources") { dependsOn(generateAppVersion) }
 // CI packages have no Developer ID certificate. Local builds keep mandatory persistent signing.
 val ciUnsigned = providers.gradleProperty("ciUnsigned").map { it.toBooleanStrict() }.orElse(false)
 kotlin { jvmToolchain(21) }
@@ -31,11 +46,15 @@ compose.desktop {
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
             packageName = "MongoDesk"
-            packageVersion = "1.0.0"
+            packageVersion = appVersion
             description = "MongoDB workspace for browsing and querying data"
             vendor = "Ideazlab"
             includeAllModules = true
-            windows { iconFile.set(project.file("packaging/icons/MongoDesk.ico")) }
+            windows {
+                iconFile.set(project.file("packaging/icons/MongoDesk.ico"))
+                // Stable across releases so future MSI packages upgrade the existing installation.
+                upgradeUuid = "9c75d5db-8838-5331-aeb9-6c5d0d9a91ed"
+            }
             linux { iconFile.set(project.file("packaging/icons/MongoDesk.png")) }
             macOS {
                 bundleID = "com.ideazlab.mongodesk"

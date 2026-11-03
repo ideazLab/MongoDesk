@@ -177,4 +177,11 @@ Open a completed workflow run under **Actions**, then download the desired insta
 
 CI installs official MongoDB Database Tools into the runner's user directory to exercise archive/restore integration tests. Downloads and SHA-256 hashes are pinned in `packaging/database-tools-lock.json`; the installer verifies the checksum before installing. Linux uses Xvfb for desktop-related tests, and Windows configures the runner's WiX 3 tools for JDK 21 MSI packaging.
 
-CI explicitly passes `-PciUnsigned=true` because personal signing identities are not present on hosted runners. CI packages are not Developer ID signed, notarized, or Windows code signed. Normal local macOS builds still require the configured persistent signing identity; the local installer continues to reject ad-hoc builds. No signing secrets are required by this workflow, and it does not create GitHub Releases automatically.
+CI explicitly passes `-PciUnsigned=true` because personal signing identities are not present on hosted runners. CI packages are not Developer ID signed, notarized, or Windows code signed. Normal local macOS builds still require the configured persistent signing identity; the local installer continues to reject ad-hoc builds. No signing secrets are required by this workflow, and version tags create draft releases only after validation and all builds pass. Publication remains manual.
+
+
+## Versioned releases and updates
+
+The agreed release process is documented in [RELEASING.md](RELEASING.md). `VERSION` is the single source for the app and installer version; the next planned release is **1.1.0**. A matching `v1.1.0` tag, pushed after the exact main commit passes CI, builds all four platforms and creates a draft GitHub Release with changelog notes, versioned installers, SHA-256 checksums, and an Ed25519-signed update manifest. A maintainer reviews and publishes it manually. Published releases are never overwritten by the workflow.
+
+The repository update-signing secret is configured; only its public key is committed. This establishes release delivery for the in-app updater, which still needs to be integrated before the first update-enabled release is tagged. Existing installations do not gain self-update support merely from this release-process change.
