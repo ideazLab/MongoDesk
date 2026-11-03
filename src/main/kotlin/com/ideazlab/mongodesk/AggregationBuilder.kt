@@ -50,8 +50,8 @@ internal fun AggregationBuilder(
             if (!jsonMode) Box {
                 Action("+ Add stage", enabled = enabled) { showTemplates = !showTemplates }
                 if (showTemplates) Popup(alignment = Alignment.TopStart, onDismissRequest = { showTemplates = false }, properties = PopupProperties(focusable = true)) {
-                    LazyColumn(Modifier.width(220.dp).heightIn(max = 300.dp).background(Color.White)
-                        .border(1.dp, Color(0xFFE3E7ED)).padding(6.dp)) {
+                    LazyColumn(Modifier.width(220.dp).heightIn(max = 300.dp).background(AppColors.surface)
+                        .border(1.dp, AppColors.line).padding(6.dp)) {
                         items(stageTemplates.entries.toList(), key = { it.key }) { template ->
                             Label(template.key, modifier = Modifier.fillMaxWidth().clickable {
                                 val stage = PipelineStage(template.key, template.value)
@@ -62,21 +62,21 @@ internal fun AggregationBuilder(
                 }
             }
             Spacer(Modifier.weight(1f))
-            Label("${if (jsonMode) "Extended JSON" else "${stages.count { it.enabled }} enabled stages"} · Read-only", Color(0xFF8392A5), 11)
+            Label("${if (jsonMode) "Extended JSON" else "${stages.count { it.enabled }} enabled stages"} · Read-only", AppColors.muted, 11)
         }
         Spacer(Modifier.height(10.dp))
         if (jsonMode) Box(Modifier.fillMaxWidth().height(bodyHeight).verticalScroll(rememberScrollState())) {
             Editor(rawJson, onJsonChange, Modifier.fillMaxWidth().heightIn(min = bodyHeight), enabled = enabled)
-        } else Row(Modifier.fillMaxWidth().height(bodyHeight).border(1.dp, Color(0xFFE3E7ED))) {
-            LazyColumn(Modifier.width(180.dp).fillMaxHeight().background(Color(0xFFFAFBFC))) {
+        } else Row(Modifier.fillMaxWidth().height(bodyHeight).border(1.dp, AppColors.line)) {
+            LazyColumn(Modifier.width(180.dp).fillMaxHeight().background(AppColors.subtle)) {
                 items(stages, key = { it.id }) { stage ->
                     val index = stages.indexOf(stage)
                     Label("${index + 1}. ${if (stage.enabled) "●" else "○"} ${stage.operator}",
-                        if (stage.id == selected?.id) Color(0xFF0168FA) else Color(0xFF8392A5),
-                        modifier = Modifier.fillMaxWidth().background(if (stage.id == selected?.id) Color(0xFFEAF2FF) else Color.Transparent)
+                        if (stage.id == selected?.id) AppColors.blue else AppColors.muted,
+                        modifier = Modifier.fillMaxWidth().background(if (stage.id == selected?.id) AppColors.selection else Color.Transparent)
                             .clickable(enabled = enabled) { selectedId = stage.id }.padding(12.dp))
                 }
-                if (stages.isEmpty()) item { Label("Add a stage to begin. An empty pipeline returns documents.", Color(0xFF8392A5), 12, modifier = Modifier.padding(12.dp)) }
+                if (stages.isEmpty()) item { Label("Add a stage to begin. An empty pipeline returns documents.", AppColors.muted, 12, modifier = Modifier.padding(12.dp)) }
             }
             Column(Modifier.weight(1f).fillMaxHeight().padding(12.dp)) {
                 if (selected != null) {
@@ -91,7 +91,7 @@ internal fun AggregationBuilder(
                     Box(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState())) {
                         Editor(selected.body, { update(selected.copy(body = it)) }, Modifier.fillMaxWidth().heightIn(min = 140.dp), enabled = enabled)
                     }
-                } else Label("Choose + Add stage or switch to Pipeline JSON.", Color(0xFF8392A5), 12)
+                } else Label("Choose + Add stage or switch to Pipeline JSON.", AppColors.muted, 12)
             }
         }
     }

@@ -43,11 +43,11 @@ import org.bson.BsonDocument
 import java.awt.FileDialog
 import java.awt.Frame
 
-private val Blue = Color(0xFF0168FA)
-private val Ink = Color(0xFF001737)
-private val Muted = Color(0xFF8392A5)
-private val Line = Color(0xFFE3E7ED)
-private val Pale = Color(0xFFF5F6FA)
+private val Blue: Color @Composable get() = AppColors.blue
+private val Ink: Color @Composable get() = AppColors.ink
+private val Muted: Color @Composable get() = AppColors.muted
+private val Line: Color @Composable get() = AppColors.line
+private val Pale: Color @Composable get() = AppColors.pale
 
 fun main(args: Array<String>) {
     if (args.contains("--backup-worker")) {
@@ -81,7 +81,9 @@ fun main(args: Array<String>) {
     } ?: return
     instance.use {
         application {
+            MongoDeskTheme {
             Window(onCloseRequest = ::exitApplication, title = "MongoDesk", icon = mongoDeskIcon(), state = rememberWindowState(width = 1380.dp, height = 900.dp)) { App(exit = ::exitApplication) }
+            }
         }
     }
 }
@@ -92,8 +94,8 @@ internal fun Label(text: String, color: Color = Ink, size: Int = 13, bold: Boole
 }
 @Composable
 internal fun Action(text: String, primary: Boolean = false, enabled: Boolean = true, danger: Boolean = false, onClick: () -> Unit) {
-    val accent = if (danger) Color(0xFFDC3545) else Blue
-    Box(Modifier.alpha(if (enabled) 1f else .4f).background(if (primary) accent else Color.White, RoundedCornerShape(4.dp))
+    val accent = if (danger) AppColors.danger else if (primary) AppColors.action else Blue
+    Box(Modifier.alpha(if (enabled) 1f else .4f).background(if (primary) accent else AppColors.surface, RoundedCornerShape(4.dp))
         .border(1.dp, if (primary || danger) accent else Line, RoundedCornerShape(4.dp)).clickable(enabled = enabled, onClick = onClick)
         .padding(horizontal = 14.dp, vertical = 9.dp)) { Label(text, if (primary) Color.White else if (danger) accent else Ink) }
 }
@@ -115,8 +117,8 @@ internal fun RadioOption(text: String, selected: Boolean, enabled: Boolean = tru
 
 @Composable
 internal fun Editor(value: String, change: (String) -> Unit, modifier: Modifier = Modifier, secret: Boolean = false, enabled: Boolean = true) {
-    BasicTextField(value, change, modifier.background(Color.White).border(1.dp, Line, RoundedCornerShape(4.dp)).padding(12.dp),
-        enabled = enabled, visualTransformation = if (secret) PasswordVisualTransformation() else VisualTransformation.None,
+    BasicTextField(value, change, modifier.background(AppColors.surface).border(1.dp, Line, RoundedCornerShape(4.dp)).padding(12.dp),
+        cursorBrush = androidx.compose.ui.graphics.SolidColor(Ink), enabled = enabled, visualTransformation = if (secret) PasswordVisualTransformation() else VisualTransformation.None,
         textStyle = TextStyle(color = Ink, fontSize = 13.sp, fontFamily = FontFamily.Monospace))
 }
 @Composable
@@ -154,7 +156,7 @@ internal fun ConnectionDropdown(
     }
     Box(Modifier.fillMaxWidth().onSizeChanged { anchorWidth = it.width }) {
         Row(Modifier.fillMaxWidth().heightIn(min = 42.dp).alpha(if (enabled) 1f else .4f)
-            .background(Color.White, RoundedCornerShape(4.dp)).border(1.dp, if (expanded) Blue else Line, RoundedCornerShape(4.dp))
+            .background(AppColors.surface, RoundedCornerShape(4.dp)).border(1.dp, if (expanded) Blue else Line, RoundedCornerShape(4.dp))
             .semantics { contentDescription = accessibleLabel; stateDescription = if (expanded) "Expanded" else "Collapsed" }
             .clickable(enabled = enabled, role = Role.Button) {
                 search = ""; highlighted = 0; expanded = !expanded
@@ -168,7 +170,7 @@ internal fun ConnectionDropdown(
             onDismissRequest = { expanded = false }, properties = PopupProperties(focusable = true)
         ) {
             Column(Modifier.width(with(density) { anchorWidth.toDp() }).shadow(10.dp, RoundedCornerShape(5.dp))
-                .background(Color.White, RoundedCornerShape(5.dp)).border(1.dp, Line, RoundedCornerShape(5.dp))
+                .background(AppColors.surface, RoundedCornerShape(5.dp)).border(1.dp, Line, RoundedCornerShape(5.dp))
                 .onPreviewKeyEvent { event ->
                     if (event.type != KeyEventType.KeyDown) false else when (event.key) {
                         Key.DirectionDown -> { highlighted = (highlighted + 1).coerceAtMost(matches.size); true }
@@ -181,18 +183,18 @@ internal fun ConnectionDropdown(
                 BasicTextField(search, { search = it; highlighted = 0 },
                     Modifier.fillMaxWidth().padding(10.dp).border(1.dp, Line, RoundedCornerShape(4.dp))
                         .semantics { contentDescription = "Search ${accessibleLabel.lowercase()}" }.focusRequester(focus).padding(10.dp),
-                    singleLine = true, textStyle = TextStyle(color = Ink, fontSize = 13.sp),
+                    cursorBrush = androidx.compose.ui.graphics.SolidColor(Ink), singleLine = true, textStyle = TextStyle(color = Ink, fontSize = 13.sp),
                     decorationBox = { input -> Box { if (search.isEmpty()) Label(searchHint, Muted); input() } })
                 LazyColumn(Modifier.heightIn(max = 220.dp), state = listState) {
                     item(key = "new-connection") {
-                        Row(Modifier.fillMaxWidth().background(if (highlighted == 0) Color(0xFFEAF2FF) else Color.White)
+                        Row(Modifier.fillMaxWidth().background(if (highlighted == 0) AppColors.selection else AppColors.surface)
                             .selectable(selected = connections.none { it.id == selectedId }, role = Role.Button, onClick = { chooseNew() })
                             .padding(horizontal = 12.dp, vertical = 11.dp), verticalAlignment = Alignment.CenterVertically) {
                             Label("+ $newLabel", Blue, modifier = Modifier.weight(1f))
                         }
                     }
                     itemsIndexed(matches, key = { _, item -> item.id }) { index, item ->
-                        Row(Modifier.fillMaxWidth().background(if (highlighted == index + 1) Color(0xFFEAF2FF) else Color.White)
+                        Row(Modifier.fillMaxWidth().background(if (highlighted == index + 1) AppColors.selection else AppColors.surface)
                             .selectable(selected = item.id == selectedId, role = Role.Button, onClick = { choose(item) })
                             .padding(horizontal = 12.dp, vertical = 11.dp), verticalAlignment = Alignment.CenterVertically) {
                             BasicText(item.name, Modifier.weight(1f), style = TextStyle(color = Ink, fontSize = 13.sp), maxLines = 1, overflow = TextOverflow.Ellipsis)
@@ -308,7 +310,7 @@ private fun ConnectionDialog(initial: ConnectionConfig, newRequested: () -> Unit
                     }
                     Spacer(Modifier.height(8.dp))
                     if (!deleteRequested) Action("Delete connection", enabled = !busy, danger = true) { deleteRequested = true }
-                    else Column(Modifier.fillMaxWidth().border(1.dp, Color(0xFFDC3545), RoundedCornerShape(4.dp)).padding(12.dp)) {
+                    else Column(Modifier.fillMaxWidth().border(1.dp, AppColors.danger, RoundedCornerShape(4.dp)).padding(12.dp)) {
                         Label("Delete ${savedConnections.first { it.id == config.id }.name}?", bold = true)
                         Spacer(Modifier.height(6.dp))
                         Label("This removes the saved profile and its encrypted local credentials, and disconnects it if active. Database data and key files are unchanged.", Muted, 12)
@@ -822,7 +824,7 @@ private fun FrameWindowScope.App(exit: () -> Unit) {
             AppCommand.UNDO, AppCommand.REDO, AppCommand.CUT, AppCommand.COPY, AppCommand.PASTE, AppCommand.SELECT_ALL -> sendEditorCommand(command)
         }
     }
-    Column(Modifier.fillMaxSize().background(Color.White)) {
+    Column(Modifier.fillMaxSize().background(AppColors.surface)) {
         Row(Modifier.fillMaxWidth().height(46.dp).border(1.dp, Line).padding(horizontal = 14.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Image(mongoDeskIcon(), "MongoDesk Workspace logo", Modifier.size(36.dp))
@@ -832,10 +834,11 @@ private fun FrameWindowScope.App(exit: () -> Unit) {
             ToolButton("Export", !busy && connections.isNotEmpty()) { databaseTransfer = DatabaseTransferRequest(false, session?.config?.id ?: explorerConnectionId, database, transferContext()) }
             ToolButton("Import", !busy && connections.isNotEmpty()) { databaseTransfer = DatabaseTransferRequest(true, session?.config?.id ?: explorerConnectionId, database) }
             BackupToolbar(!busy) { create -> backupManager = BackupManagerRequest(session?.config?.id, database, create) }
+            ThemePicker()
             ToolButton("Connections", !busy) { showManager = true }
         }
         Row(Modifier.weight(1f)) {
-            Column(Modifier.width(sidebarWidth.dp).fillMaxHeight().background(Color(0xFFFAFBFC)).padding(12.dp)) {
+            Column(Modifier.width(sidebarWidth.dp).fillMaxHeight().background(AppColors.subtle).padding(12.dp)) {
                 Label("CONNECTIONS", Muted, 10, true)
                 Spacer(Modifier.height(12.dp))
                 Column(Modifier.weight(1f).verticalScroll(rememberScrollState())) {
@@ -866,7 +869,7 @@ private fun FrameWindowScope.App(exit: () -> Unit) {
                         }
                         }
                         connectionErrors[id]?.let { error ->
-                            Label("Reconnect failed: $error", Color(0xFFDC3545), 11, modifier = Modifier.padding(start = 12.dp, bottom = 8.dp))
+                            Label("Reconnect failed: $error", AppColors.danger, 11, modifier = Modifier.padding(start = 12.dp, bottom = 8.dp))
                             ToolButton("Retry", !busy) { operation { ensureConnection(id) } }
                             ToolButton("Stop reconnecting at startup", !busy) { rememberedConnections.remove(id); connectionErrors.remove(id); persistTabs() }
                         }
@@ -910,7 +913,7 @@ private fun FrameWindowScope.App(exit: () -> Unit) {
                                                 add(ContextMenuItem("Drop collection…") { dropTarget = DropNamespaceTarget(open.session, db, name) })
                                             }
                                         }) {
-                                        Box(Modifier.fillMaxWidth().background(if (isSelected) Color(0xFFEAF2FF) else Color.Transparent)
+                                        Box(Modifier.fillMaxWidth().background(if (isSelected) AppColors.selection else Color.Transparent)
                                             .clickable(enabled = navigationEnabled && tabsReady) { operation { openCollection(id, db, name) } }.padding(start = 30.dp, top = 7.dp, bottom = 7.dp)) {
                                             Label("▤ $name", if (isSelected) Blue else Ink, 12)
                                         }
@@ -929,12 +932,12 @@ private fun FrameWindowScope.App(exit: () -> Unit) {
                 Column(Modifier.fillMaxSize()) {
                     val tabScroll = rememberScrollState()
                     Row(Modifier.fillMaxWidth().height(38.dp).background(Pale).horizontalScroll(tabScroll)) {
-                        Box(Modifier.fillMaxHeight().background(if (dashboard) Color.White else Color.Transparent).border(1.dp, Line)
+                        Box(Modifier.fillMaxHeight().background(if (dashboard) AppColors.surface else Color.Transparent).border(1.dp, Line)
                             .clickable(enabled = navigationEnabled) { activeTabId = null; persistTabs() }.padding(horizontal = 18.dp), contentAlignment = Alignment.Center) { Label("Dashboard", if (dashboard) Blue else Muted, 12, dashboard) }
                         collectionTabs.forEach { item ->
                             val active = activeTabId == item.ref.id
                             val name = connections[item.ref.connectionId]?.session?.config?.name ?: savedConnections.firstOrNull { it.id == item.ref.connectionId }?.name ?: "Missing connection"
-                            Row(Modifier.fillMaxHeight().background(if (active) Color.White else Color.Transparent).border(1.dp, Line), verticalAlignment = Alignment.CenterVertically) {
+                            Row(Modifier.fillMaxHeight().background(if (active) AppColors.surface else Color.Transparent).border(1.dp, Line), verticalAlignment = Alignment.CenterVertically) {
                                 Label("${item.ref.database}.${item.ref.collection} · $name", if (active) Blue else Muted, 12, active,
                                     Modifier.clickable(enabled = navigationEnabled) { operation { activate(item) } }.padding(horizontal = 12.dp, vertical = 10.dp))
                                 Box(Modifier.fillMaxHeight().clickable(enabled = navigationEnabled, role = Role.Button) { closeTab(item) }.padding(horizontal = 9.dp), contentAlignment = Alignment.Center) { Label("×", Muted, 16) }

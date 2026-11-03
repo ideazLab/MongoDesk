@@ -57,7 +57,7 @@ internal fun SavedPipelineBar(
         }
         Spacer(Modifier.height(6.dp))
         Label(if (working) "Updating saved pipelines…" else if (dirty) "Unsaved changes" else if (selected != null && selected.collection.isNotEmpty())
-            "Saved for ${selected.database}.${selected.collection} · Runs against the collection selected above" else "Name your pipeline, then save it for another session.", Color(0xFF8392A5), 11)
+            "Saved for ${selected.database}.${selected.collection} · Runs against the collection selected above" else "Name your pipeline, then save it for another session.", AppColors.muted, 11)
         if (confirmDelete && selected != null) {
             Row(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                 Label("Delete saved pipeline ‘${selected.name}’?")

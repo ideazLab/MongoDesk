@@ -99,10 +99,10 @@ internal fun DocumentFieldEditorDialog(target: DocumentFieldEditTarget, saved: (
     val initial = if (adding) "null" else path?.let { fieldValueJson(fieldValue(document.original, it)) }.orEmpty()
     fun close() { if (!saving) { if (!deleting && (draft != initial || (adding && name.isNotEmpty()))) discard = true else dismiss() } }
     DialogWindow(onCloseRequest = { close() }, title = "MongoDesk · ${target.action.title}", state = rememberDialogState(width = 920.dp, height = 740.dp)) {
-        Column(Modifier.fillMaxSize().background(Color.White).padding(24.dp)) {
+        Column(Modifier.fillMaxSize().background(AppColors.surface).padding(24.dp)) {
             Label(if (reviewed == null) target.action.title else "Review ${target.action.title.lowercase()}", size = 23, bold = true)
-            Spacer(Modifier.height(8.dp)); Label("${document.session.config.name} / ${document.database}.${document.collection}", Color(0xFF8392A5), 12)
-            Spacer(Modifier.height(8.dp)); Label("_id: ${document.original["_id"]?.tableValue()}", Color(0xFF8392A5), 11)
+            Spacer(Modifier.height(8.dp)); Label("${document.session.config.name} / ${document.database}.${document.collection}", AppColors.muted, 12)
+            Spacer(Modifier.height(8.dp)); Label("_id: ${document.original["_id"]?.tableValue()}", AppColors.muted, 11)
             Spacer(Modifier.height(14.dp))
             val selectedPath = path
             if (selectedPath == null) {
@@ -118,7 +118,7 @@ internal fun DocumentFieldEditorDialog(target: DocumentFieldEditTarget, saved: (
                 }
             } else {
                 Label("${if (adding) "Parent object" else "Path"}: ${if (selectedPath.isEmpty()) "Document root" else fieldPathLabel(selectedPath)}", size = 12, bold = true)
-                Spacer(Modifier.height(8.dp)); Label("Use Extended JSON: quote strings; use objects/arrays or BSON wrappers for typed values. Unrelated fields stay unchanged. A concurrent change to the document prevents saving.", Color(0xFF8392A5), 12)
+                Spacer(Modifier.height(8.dp)); Label("Use Extended JSON: quote strings; use objects/arrays or BSON wrappers for typed values. Unrelated fields stay unchanged. A concurrent change to the document prevents saving.", AppColors.muted, 12)
                 Spacer(Modifier.height(14.dp))
                 val replacement = reviewed
                 if (replacement == null) Column(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState())) {
@@ -127,19 +127,19 @@ internal fun DocumentFieldEditorDialog(target: DocumentFieldEditTarget, saved: (
                         Spacer(Modifier.height(12.dp)); Label("VALUE (EXTENDED JSON)", size = 11, bold = true); Spacer(Modifier.height(8.dp))
                     }
                     if (deleting) {
-                        Label("This removes the field and its entire value, including any nested fields. Review the removal before confirming.", Color(0xFFDC3545), 12)
+                        Label("This removes the field and its entire value, including any nested fields. Review the removal before confirming.", AppColors.danger, 12)
                         Spacer(Modifier.height(12.dp)); Label(initial, size = 12)
                     } else Editor(draft, { draft = it; discard = false }, Modifier.fillMaxWidth().heightIn(min = 300.dp), enabled = !saving)
                 } else Row(Modifier.weight(1f).fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     listOf("BEFORE" to (if (adding) "(field does not exist)" else initial), "AFTER" to (if (deleting) "(field removed)" else fieldValueJson(fieldValue(replacement, if (adding) selectedPath + name else selectedPath)))).forEach { (title, value) ->
                         Column(Modifier.weight(1f).fillMaxHeight()) {
                             Label(title, size = 11, bold = true); Spacer(Modifier.height(8.dp))
-                            Column(Modifier.fillMaxSize().background(Color(0xFFF5F6FA)).padding(12.dp).verticalScroll(rememberScrollState())) { Label(value, size = 12) }
+                            Column(Modifier.fillMaxSize().background(AppColors.pale).padding(12.dp).verticalScroll(rememberScrollState())) { Label(value, size = 12) }
                         }
                     }
                 }
             }
-            Spacer(Modifier.height(12.dp)); Label(if (saving) "Saving…" else message, Color(0xFF8392A5), 12)
+            Spacer(Modifier.height(12.dp)); Label(if (saving) "Saving…" else message, AppColors.muted, 12)
             Spacer(Modifier.height(12.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 if (discard) {

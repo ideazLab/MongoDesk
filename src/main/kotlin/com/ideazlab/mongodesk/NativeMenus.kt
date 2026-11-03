@@ -145,6 +145,13 @@ private fun MenuScope.NativeMenuContents(section: AppMenuSection, state: NativeM
             Item("Delete document…", enabled = state.available && state.document && state.editable) { action(AppCommand.DELETE_DOCUMENT) }
                 }
         AppMenuSection.VIEW -> {
+            val appearance = LocalThemeControl.current
+            Menu("Appearance") {
+                ThemeMode.entries.forEach { mode ->
+                    CheckboxItem(if (mode == ThemeMode.SYSTEM) "Follow system" else mode.label, checked = appearance.mode == mode) { appearance.change(mode) }
+                }
+            }
+            Separator()
             Item("Dashboard", enabled = state.available, shortcut = shortcut(Key.D, shift = true)) { action(AppCommand.DASHBOARD) }
             Separator()
             listOf(Triple("Table view", DocumentView.TABLE, AppCommand.TABLE), Triple("Tree view", DocumentView.TREE, AppCommand.TREE), Triple("JSON view", DocumentView.JSON, AppCommand.JSON)).forEach { (label, view, command) ->
@@ -193,7 +200,7 @@ internal fun NativeApplicationHandlers(about: () -> Unit, quit: () -> Unit) {
 @Composable
 internal fun AboutMongoDeskDialog(dismiss: () -> Unit) {
     Dialog(onDismissRequest = dismiss, properties = DialogProperties(dismissOnClickOutside = false)) {
-        Column(Modifier.width(440.dp).background(Color.White).border(1.dp, WorkspaceLine).padding(24.dp)) {
+        Column(Modifier.width(440.dp).background(AppColors.surface).border(1.dp, WorkspaceLine).padding(24.dp)) {
             androidx.compose.foundation.Image(mongoDeskIcon(), "MongoDesk icon", Modifier.size(64.dp))
             Spacer(Modifier.height(12.dp)); Label("MongoDesk", size = 25, bold = true)
             Spacer(Modifier.height(6.dp)); Label("Version ${AppBuild.version} · Ideazlab", size = 12)

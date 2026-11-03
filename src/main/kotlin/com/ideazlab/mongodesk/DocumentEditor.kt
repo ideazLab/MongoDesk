@@ -29,12 +29,12 @@ internal fun DocumentEditorDialog(target: DocumentEditTarget, saved: () -> Unit,
     }
     DialogWindow(onCloseRequest = { requestClose() }, title = "MongoDesk · Edit document",
         state = rememberDialogState(width = 1080.dp, height = 780.dp)) {
-        Column(Modifier.fillMaxSize().background(Color(0xFFF5F6FA)).padding(24.dp)) {
+        Column(Modifier.fillMaxSize().background(AppColors.pale).padding(24.dp)) {
             Label(if (reviewed == null) "Edit document" else "Review document update", size = 23, bold = true)
             Spacer(Modifier.height(8.dp))
-            Label("${target.session.config.name} / ${target.database}.${target.collection}", Color(0xFF8392A5))
+            Label("${target.session.config.name} / ${target.database}.${target.collection}", AppColors.muted)
             Spacer(Modifier.height(6.dp))
-            Label("_id: ${target.original["_id"]?.tableValue()}", Color(0xFF8392A5), 11)
+            Label("_id: ${target.original["_id"]?.tableValue()}", AppColors.muted, 11)
             Spacer(Modifier.height(16.dp))
             val replacement = reviewed
             if (replacement == null) {
@@ -45,21 +45,21 @@ internal fun DocumentEditorDialog(target: DocumentEditTarget, saved: () -> Unit,
                 val changes = documentChanges(target.original, replacement)
                 Label("${changes.size} changed top-level fields · This replaces the whole document", bold = true)
                 Spacer(Modifier.height(8.dp))
-                Label(changes.take(8).joinToString(" · ") { "${it.kind}: ${it.field}" } + if (changes.size > 8) " · …" else "", Color(0xFF8392A5), 12)
+                Label(changes.take(8).joinToString(" · ") { "${it.kind}: ${it.field}" } + if (changes.size > 8) " · …" else "", AppColors.muted, 12)
                 Spacer(Modifier.height(12.dp))
                 Row(Modifier.weight(1f).fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     Column(Modifier.weight(1f).fillMaxHeight()) {
-                        Label("BEFORE", Color(0xFF8392A5), 11, true); Spacer(Modifier.height(8.dp))
-                        Column(Modifier.fillMaxSize().background(Color.White).padding(12.dp).verticalScroll(rememberScrollState())) { Label(originalJson, size = 12) }
+                        Label("BEFORE", AppColors.muted, 11, true); Spacer(Modifier.height(8.dp))
+                        Column(Modifier.fillMaxSize().background(AppColors.surface).padding(12.dp).verticalScroll(rememberScrollState())) { Label(originalJson, size = 12) }
                     }
                     Column(Modifier.weight(1f).fillMaxHeight()) {
-                        Label("AFTER", Color(0xFF8392A5), 11, true); Spacer(Modifier.height(8.dp))
-                        Column(Modifier.fillMaxSize().background(Color.White).padding(12.dp).verticalScroll(rememberScrollState())) { Label(replacement.pretty(), size = 12) }
+                        Label("AFTER", AppColors.muted, 11, true); Spacer(Modifier.height(8.dp))
+                        Column(Modifier.fillMaxSize().background(AppColors.surface).padding(12.dp).verticalScroll(rememberScrollState())) { Label(replacement.pretty(), size = 12) }
                     }
                 }
             }
             Spacer(Modifier.height(16.dp))
-            Label(if (saving) "Saving to MongoDB…" else message, Color(0xFF8392A5), 12)
+            Label(if (saving) "Saving to MongoDB…" else message, AppColors.muted, 12)
             Spacer(Modifier.height(12.dp))
             if (discardRequested) {
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {

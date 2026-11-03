@@ -93,11 +93,11 @@ internal fun DocumentViewPicker(view: DocumentView, enabled: Boolean, changed: (
     Box {
         ToolButton("${view.label} ▾", enabled) { expanded = !expanded }
         if (expanded) Popup(alignment = Alignment.TopEnd, offset = IntOffset(0, popupOffset), onDismissRequest = { expanded = false }, properties = PopupProperties(focusable = true)) {
-            Column(Modifier.width(160.dp).background(Color.White).border(1.dp, WorkspaceLine).padding(5.dp)) {
+            Column(Modifier.width(160.dp).background(AppColors.surface).border(1.dp, WorkspaceLine).padding(5.dp)) {
                 DocumentView.entries.forEach { item ->
-                    Box(Modifier.fillMaxWidth().background(if (view == item) Color(0xFFEAF2FF) else Color.White)
+                    Box(Modifier.fillMaxWidth().background(if (view == item) AppColors.selection else AppColors.surface)
                         .clickable(role = Role.Button) { expanded = false; changed(item) }.padding(11.dp)) {
-                        Label("${if (view == item) "✓ " else ""}${item.label}", if (view == item) WorkspaceBlue else Color(0xFF1B2E4B), 12)
+                        Label("${if (view == item) "✓ " else ""}${item.label}", if (view == item) WorkspaceBlue else AppColors.text, 12)
                     }
                 }
             }
@@ -121,24 +121,24 @@ internal fun DocumentTreeView(documents: List<BsonDocument>, selected: Int?, ena
     }
     fun toggle(path: TreePath) { expanded[path] = expanded[path] != true }
     val density = LocalDensity.current.density
-    BoxWithConstraints(modifier.background(Color.White)) {
+    BoxWithConstraints(modifier.background(AppColors.surface)) {
         val width = maxOf(maxWidth.value, keyWidth + valueWidth + 140f)
         val actualValueWidth = width - keyWidth - 140f
         Column(Modifier.fillMaxSize()) {
-            Row(Modifier.fillMaxWidth().background(Color(0xFFFAFBFC)).padding(horizontal = 8.dp, vertical = 5.dp), horizontalArrangement = Arrangement.spacedBy(7.dp), verticalAlignment = Alignment.CenterVertically) {
+            Row(Modifier.fillMaxWidth().background(AppColors.subtle).padding(horizontal = 8.dp, vertical = 5.dp), horizontalArrangement = Arrangement.spacedBy(7.dp), verticalAlignment = Alignment.CenterVertically) {
                 ToolButton("Expand documents", enabled && documents.isNotEmpty()) { documents.indices.forEach { expanded[TreePath(it)] = true } }
                 ToolButton("Collapse all", enabled && documents.isNotEmpty()) { expanded.clear() }
-                Label("${documents.size} documents · Expand objects and arrays to explore fields", Color(0xFF8392A5), 11)
+                Label("${documents.size} documents · Expand objects and arrays to explore fields", AppColors.muted, 11)
             }
             if (documents.isEmpty()) CompactContextMenuArea(items = { contextMenu(-1, emptyList()) }, modifier = Modifier.weight(1f).fillMaxWidth()) {
-                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Label(empty, Color(0xFF8392A5), 13) }
+                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Label(empty, AppColors.muted, 13) }
             }
             else Box(Modifier.weight(1f).fillMaxWidth()) {
                 Column(Modifier.fillMaxSize().horizontalScroll(horizontal)) {
-                    Row(Modifier.width(width.dp).height(30.dp).background(Color(0xFFF4F5F8))) {
+                    Row(Modifier.width(width.dp).height(30.dp).background(AppColors.header)) {
                         listOf("Key" to keyWidth, "Value" to actualValueWidth, "Type" to 140f).forEachIndexed { index, (title, cellWidth) ->
                             Row(Modifier.width(cellWidth.dp).fillMaxHeight(), verticalAlignment = Alignment.CenterVertically) {
-                                BasicText(title, Modifier.weight(1f).padding(horizontal = 9.dp), style = TextStyle(color = Color(0xFF596882), fontSize = 11.sp, fontWeight = FontWeight.SemiBold))
+                                BasicText(title, Modifier.weight(1f).padding(horizontal = 9.dp), style = TextStyle(color = AppColors.secondary, fontSize = 11.sp, fontWeight = FontWeight.SemiBold))
                                 Box(Modifier.width(5.dp).fillMaxHeight().background(WorkspaceLine).pointerInput(index, density) {
                                     detectDragGestures { change, drag ->
                                         change.consume()
@@ -153,19 +153,19 @@ internal fun DocumentTreeView(documents: List<BsonDocument>, selected: Int?, ena
                         itemsIndexed(rows, key = { _, row -> row.path }) { index, row ->
                             val chosen = selected == row.path.document && (selectedPath == row.path || (row.root && (selectedPath == null || selectedPath.document != selected)))
                             CompactContextMenuArea(items = { contextMenu(row.path.document, row.path.segments) }) {
-                            Row(Modifier.fillMaxWidth().height(28.dp).background(if (chosen) Color(0xFFDDEBFF) else if (index % 2 == 0) Color.White else Color(0xFFFAFBFC))
+                            Row(Modifier.fillMaxWidth().height(28.dp).background(if (chosen) AppColors.selected else if (index % 2 == 0) AppColors.surface else AppColors.subtle)
                                 .combinedClickable(enabled = enabled, onClick = { pathSelected(row.path); select(row.path.document) }, onDoubleClick = { pathSelected(row.path); select(row.path.document); inspect(row.path.document) })) {
                                 Row(Modifier.width(keyWidth.dp).fillMaxHeight().border(.5.dp, WorkspaceLine).padding(start = (row.depth * 18).dp), verticalAlignment = Alignment.CenterVertically) {
                                     Box(Modifier.width(25.dp).fillMaxHeight().then(if (row.expandable) Modifier.clickable(enabled = enabled, role = Role.Button) { toggle(row.path); pathSelected(row.path); select(row.path.document) } else Modifier), contentAlignment = Alignment.Center) {
-                                        if (row.expandable) Label(if (expanded[row.path] == true) "▾" else "▸", Color(0xFF8392A5), 13)
+                                        if (row.expandable) Label(if (expanded[row.path] == true) "▾" else "▸", AppColors.muted, 13)
                                     }
-                                    BasicText(row.key, Modifier.weight(1f).padding(end = 8.dp), style = TextStyle(color = Color(0xFF1B2E4B), fontSize = 12.sp, fontWeight = if (row.root) FontWeight.SemiBold else FontWeight.Normal), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                    BasicText(row.key, Modifier.weight(1f).padding(end = 8.dp), style = TextStyle(color = AppColors.text, fontSize = 12.sp, fontWeight = if (row.root) FontWeight.SemiBold else FontWeight.Normal), maxLines = 1, overflow = TextOverflow.Ellipsis)
                                 }
                                 Box(Modifier.width(actualValueWidth.dp).fillMaxHeight().border(.5.dp, WorkspaceLine).padding(horizontal = 9.dp), contentAlignment = Alignment.CenterStart) {
-                                    val color = when { row.value.isString -> Color(0xFF28834A); row.value.isBoolean -> Color(0xFF9C3FA6); row.value.isDocument || row.value.isArray -> Color(0xFF008D9C); else -> Color(0xFF1B2E4B) }
+                                    val color = when { row.value.isString -> AppColors.string; row.value.isBoolean -> AppColors.boolean; row.value.isDocument || row.value.isArray -> AppColors.objectValue; else -> AppColors.text }
                                     BasicText(row.summary, style = TextStyle(color = color, fontSize = 12.sp), maxLines = 1, softWrap = false, overflow = TextOverflow.Ellipsis)
                                 }
-                                Box(Modifier.width(140.dp).fillMaxHeight().border(.5.dp, WorkspaceLine).padding(horizontal = 9.dp), contentAlignment = Alignment.CenterStart) { Label(row.type, Color(0xFF8392A5), 11) }
+                                Box(Modifier.width(140.dp).fillMaxHeight().border(.5.dp, WorkspaceLine).padding(horizontal = 9.dp), contentAlignment = Alignment.CenterStart) { Label(row.type, AppColors.muted, 11) }
                             }
                             }
                         }
@@ -185,10 +185,10 @@ internal fun PageSizePicker(size: Int, enabled: Boolean, changed: (Int) -> Unit)
     Box {
         ToolButton("$size per page ▾", enabled) { expanded = !expanded }
         if (expanded) Popup(alignment = Alignment.TopEnd, offset = IntOffset(0, offset), onDismissRequest = { expanded = false }, properties = PopupProperties(focusable = true)) {
-            Column(Modifier.width(150.dp).background(Color.White).border(1.dp, WorkspaceLine).padding(5.dp)) {
+            Column(Modifier.width(150.dp).background(AppColors.surface).border(1.dp, WorkspaceLine).padding(5.dp)) {
                 MongoSession.PAGE_SIZES.forEach { item ->
                     Box(Modifier.fillMaxWidth().clickable(role = Role.Button) { expanded = false; if (item != size) changed(item) }.padding(10.dp)) {
-                        Label("${if (item == size) "✓ " else ""}$item per page", if (item == size) WorkspaceBlue else Color(0xFF1B2E4B), 12)
+                        Label("${if (item == size) "✓ " else ""}$item per page", if (item == size) WorkspaceBlue else AppColors.text, 12)
                     }
                 }
             }

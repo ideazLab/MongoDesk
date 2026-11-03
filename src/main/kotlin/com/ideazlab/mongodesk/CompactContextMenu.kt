@@ -30,15 +30,15 @@ internal fun CompactContextMenuArea(items: () -> List<ContextMenuItem>, fontSize
 
 @Composable
 private fun CompactMenuColumn(entries: List<ContextMenuItem>, selected: Int, fontSize: Int, hover: (Int) -> Unit, choose: (Int) -> Unit) {
-    Column(Modifier.widthIn(min = 130.dp, max = 320.dp).width(IntrinsicSize.Max).shadow(7.dp).background(Color.White).border(1.dp, WorkspaceLine).padding(4.dp)) {
+    Column(Modifier.widthIn(min = 130.dp, max = 320.dp).width(IntrinsicSize.Max).shadow(7.dp).background(AppColors.surface).border(1.dp, WorkspaceLine).padding(4.dp)) {
         entries.forEachIndexed { index, item ->
             val interaction = remember(item.label) { MutableInteractionSource() }
             val hovered by interaction.collectIsHoveredAsState()
             LaunchedEffect(hovered) { if (hovered) hover(index) }
-            Row(Modifier.fillMaxWidth().background(if (hovered || selected == index) Color(0xFFEAF2FF) else Color.White)
+            Row(Modifier.fillMaxWidth().background(if (hovered || selected == index) AppColors.selection else AppColors.surface)
                 .hoverable(interaction).clickable(role = Role.Button) { choose(index) }.padding(horizontal = 11.dp, vertical = 7.dp), verticalAlignment = Alignment.CenterVertically) {
-                Label(item.label, Color(0xFF1B2E4B), size = fontSize, modifier = Modifier.weight(1f))
-                if (item is SubmenuContextItem) { Spacer(Modifier.width(14.dp)); Label("›", Color(0xFF8392A5), size = fontSize) }
+                Label(item.label, AppColors.text, size = fontSize, modifier = Modifier.weight(1f))
+                if (item is SubmenuContextItem) { Spacer(Modifier.width(14.dp)); Label("›", AppColors.muted, size = fontSize) }
             }
         }
     }

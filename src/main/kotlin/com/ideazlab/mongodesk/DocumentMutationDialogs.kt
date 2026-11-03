@@ -23,16 +23,16 @@ internal fun NewDocumentDialog(target: DocumentCollectionTarget, inserted: (Bson
     val scope = rememberCoroutineScope()
     fun close() { if (!saving) { if (draft != "{}") discard = true else dismiss() } }
     DialogWindow(onCloseRequest = { close() }, title = "MongoDesk · New document", state = rememberDialogState(width = 850.dp, height = 740.dp)) {
-        Column(Modifier.fillMaxSize().background(Color(0xFFF5F6FA)).padding(24.dp)) {
+        Column(Modifier.fillMaxSize().background(AppColors.pale).padding(24.dp)) {
             Label(if (reviewed == null) "New document" else "Review new document", size = 23, bold = true)
-            Spacer(Modifier.height(8.dp)); Label("${target.session.config.name} / ${target.database}.${target.collection}", Color(0xFF8392A5))
+            Spacer(Modifier.height(8.dp)); Label("${target.session.config.name} / ${target.database}.${target.collection}", AppColors.muted)
             Spacer(Modifier.height(16.dp))
             val document = reviewed
             Box(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState())) {
                 if (document == null) Editor(draft, { draft = it; discard = false }, Modifier.fillMaxWidth().heightIn(min = 430.dp), enabled = !saving)
-                else Column(Modifier.fillMaxWidth().background(Color.White).padding(14.dp)) { Label(document.pretty(), size = 13) }
+                else Column(Modifier.fillMaxWidth().background(AppColors.surface).padding(14.dp)) { Label(document.pretty(), size = 13) }
             }
-            Spacer(Modifier.height(14.dp)); Label(if (saving) "Inserting document…" else message, Color(0xFF8392A5), 12)
+            Spacer(Modifier.height(14.dp)); Label(if (saving) "Inserting document…" else message, AppColors.muted, 12)
             Spacer(Modifier.height(12.dp))
             if (discard) Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Label("Discard this draft?")
@@ -66,13 +66,13 @@ internal fun DeleteDocumentDialog(target: DocumentEditTarget, deleted: () -> Uni
     var message by remember { mutableStateOf("This permanently deletes this one document. The operation cannot be undone in MongoDesk.") }
     val scope = rememberCoroutineScope()
     DialogWindow(onCloseRequest = { if (!saving) dismiss() }, title = "MongoDesk · Delete document", state = rememberDialogState(width = 780.dp, height = 660.dp)) {
-        Column(Modifier.fillMaxSize().background(Color(0xFFF5F6FA)).padding(24.dp)) {
+        Column(Modifier.fillMaxSize().background(AppColors.pale).padding(24.dp)) {
             Label("Delete document?", size = 23, bold = true)
-            Spacer(Modifier.height(8.dp)); Label("${target.session.config.name} / ${target.database}.${target.collection}", Color(0xFF8392A5))
+            Spacer(Modifier.height(8.dp)); Label("${target.session.config.name} / ${target.database}.${target.collection}", AppColors.muted)
             Spacer(Modifier.height(8.dp)); Label("_id: ${target.original["_id"]?.tableValue()}", bold = true)
             Spacer(Modifier.height(14.dp))
-            Column(Modifier.weight(1f).fillMaxWidth().background(Color.White).padding(14.dp).verticalScroll(rememberScrollState())) { Label(target.original.pretty(), size = 12) }
-            Spacer(Modifier.height(14.dp)); Label(if (saving) "Deleting document…" else message, Color(0xFF8392A5), 12)
+            Column(Modifier.weight(1f).fillMaxWidth().background(AppColors.surface).padding(14.dp).verticalScroll(rememberScrollState())) { Label(target.original.pretty(), size = 12) }
+            Spacer(Modifier.height(14.dp)); Label(if (saving) "Deleting document…" else message, AppColors.muted, 12)
             Spacer(Modifier.height(12.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 Action("Cancel", enabled = !saving) { dismiss() }

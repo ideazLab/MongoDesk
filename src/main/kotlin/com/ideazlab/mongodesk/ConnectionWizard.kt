@@ -67,9 +67,9 @@ internal fun NewConnectionWizard(profiles: ConnectionProfiles, saved: () -> Unit
         }
     }
     Dialog(onDismissRequest = { if (!busy) dismiss() }, properties = DialogProperties(usePlatformDefaultWidth = false, dismissOnClickOutside = false)) {
-        Column(Modifier.width(820.dp).height(690.dp).background(Color.White).border(1.dp, WorkspaceLine).padding(24.dp)) {
+        Column(Modifier.width(820.dp).height(690.dp).background(AppColors.surface).border(1.dp, WorkspaceLine).padding(24.dp)) {
             Label("New connection", size = 24, bold = true)
-            Spacer(Modifier.height(8.dp)); Label("${step + 1} of 3 · ${listOf("Choose setup method", "Configure connection", "Review and save")[step]}", Color(0xFF8392A5), 12)
+            Spacer(Modifier.height(8.dp)); Label("${step + 1} of 3 · ${listOf("Choose setup method", "Configure connection", "Review and save")[step]}", AppColors.muted, 12)
             Row(Modifier.fillMaxWidth().padding(vertical = 16.dp), horizontalArrangement = Arrangement.spacedBy(5.dp)) {
                 repeat(3) { index -> Box(Modifier.weight(1f).height(3.dp).background(if (index <= step) WorkspaceBlue else WorkspaceLine)) }
             }
@@ -86,14 +86,14 @@ internal fun NewConnectionWizard(profiles: ConnectionProfiles, saved: () -> Unit
                             Spacer(Modifier.height(20.dp))
                             RadioOption("Manually configure connection settings", !fromUri, !busy) { fromUri = false }
                         }
-                        Spacer(Modifier.height(12.dp)); Label("URI options and credentials are preserved exactly. Nothing is saved until you finish the wizard.", Color(0xFF8392A5), 12)
+                        Spacer(Modifier.height(12.dp)); Label("URI options and credentials are preserved exactly. Nothing is saved until you finish the wizard.", AppColors.muted, 12)
                     }
                     1 -> {
                         Field("CONNECTION NAME", config.name, enabled = !busy) { config = config.copy(name = it) }
-                        Row(Modifier.fillMaxWidth().background(Color(0xFFF5F6FA))) {
+                        Row(Modifier.fillMaxWidth().background(AppColors.pale)) {
                             listOf("Server", "Authentication", "TLS", "SSH").forEach { name ->
-                                Box(Modifier.clickable(enabled = !busy) { section = name }.background(if (section == name) Color(0xFFEAF2FF) else Color.Transparent).padding(14.dp)) {
-                                    Label(name, if (section == name) WorkspaceBlue else Color(0xFF8392A5), 12, true)
+                                Box(Modifier.clickable(enabled = !busy) { section = name }.background(if (section == name) AppColors.selection else Color.Transparent).padding(14.dp)) {
+                                    Label(name, if (section == name) WorkspaceBlue else AppColors.muted, 12, true)
                                 }
                             }
                         }
@@ -105,7 +105,7 @@ internal fun NewConnectionWizard(profiles: ConnectionProfiles, saved: () -> Unit
                                     Action(if (reveal) "Hide URI" else "Show URI", enabled = !busy) { reveal = !reveal }
                                     val parsed = runCatching { ConnectionString(uri.trim()) }.getOrNull()
                                     Spacer(Modifier.height(12.dp)); Label("Server: ${parsed?.hosts?.joinToString() ?: "Check URI"}", size = 12)
-                                    Label(if (parsed?.isSrvProtocol == true) "DNS SRV discovery" else "Standard connection string", Color(0xFF8392A5), 12)
+                                    Label(if (parsed?.isSrvProtocol == true) "DNS SRV discovery" else "Standard connection string", AppColors.muted, 12)
                                 } else {
                                     Row(Modifier.selectableGroup(), horizontalArrangement = Arrangement.spacedBy(18.dp)) {
                                         RadioOption("Standard", !srv, !busy) { srv = false }
@@ -121,7 +121,7 @@ internal fun NewConnectionWizard(profiles: ConnectionProfiles, saved: () -> Unit
                                 if (fromUri) {
                                     val parsed = runCatching { ConnectionString(uri.trim()) }.getOrNull()
                                     Label(if (parsed?.credential != null) "Credentials are configured in the connection string." else "No username or password found in the connection string.", size = 13)
-                                    Spacer(Modifier.height(12.dp)); Label("Update authentication on the Server tab by editing your URI. All authentication options are retained.", Color(0xFF8392A5), 12)
+                                    Spacer(Modifier.height(12.dp)); Label("Update authentication on the Server tab by editing your URI. All authentication options are retained.", AppColors.muted, 12)
                                 } else {
                                     Row(Modifier.selectableGroup(), horizontalArrangement = Arrangement.spacedBy(18.dp)) {
                                         RadioOption("No authentication", !authenticate, !busy) { authenticate = false }
@@ -138,13 +138,13 @@ internal fun NewConnectionWizard(profiles: ConnectionProfiles, saved: () -> Unit
                                 if (fromUri) {
                                     val parsed = runCatching { ConnectionString(uri.trim()) }.getOrNull()
                                     Label(when (parsed?.sslEnabled) { true -> "TLS enabled"; false -> "TLS disabled"; null -> if (parsed?.isSrvProtocol == true) "TLS enabled by default for SRV" else "TLS uses driver defaults" }, size = 14, bold = true)
-                                    Spacer(Modifier.height(12.dp)); Label("TLS options are taken from your URI. Edit tls and certificate options on the Server tab.", Color(0xFF8392A5), 12)
+                                    Spacer(Modifier.height(12.dp)); Label("TLS options are taken from your URI. Edit tls and certificate options on the Server tab.", AppColors.muted, 12)
                                 } else {
                                     Column(Modifier.selectableGroup()) {
                                         RadioOption("Enable TLS", tls, !busy) { tls = true }
                                         RadioOption("Disable TLS", !tls, !busy) { tls = false }
                                     }
-                                    Label("Server certificates and hostnames are verified. For additional TLS options, start with a URI.", Color(0xFF8392A5), 12)
+                                    Label("Server certificates and hostnames are verified. For additional TLS options, start with a URI.", AppColors.muted, 12)
                                 }
                             }
                             "SSH" -> {
@@ -153,7 +153,7 @@ internal fun NewConnectionWizard(profiles: ConnectionProfiles, saved: () -> Unit
                                     RadioOption("SSH tunnel", config.ssh, !busy) { config = config.copy(ssh = true) }
                                 }
                                 if (config.ssh) {
-                                    Label("SSH requires one standard MongoDB host and a trusted known_hosts entry.", Color(0xFF8392A5), 12)
+                                    Label("SSH requires one standard MongoDB host and a trusted known_hosts entry.", AppColors.muted, 12)
                                     Spacer(Modifier.height(12.dp))
                                     Field("SSH HOST", config.sshHost, enabled = !busy) { config = config.copy(sshHost = it) }
                                     Field("SSH PORT", config.sshPort, enabled = !busy) { config = config.copy(sshPort = it) }
@@ -181,12 +181,12 @@ internal fun NewConnectionWizard(profiles: ConnectionProfiles, saved: () -> Unit
                         Spacer(Modifier.height(12.dp)); Label("Database: ${config.database.ifEmpty { "All accessible databases" }}", size = 13)
                         Spacer(Modifier.height(12.dp)); Label("Authentication: ${if (parsed?.credential != null) "Configured" else "None"}", size = 13)
                         Spacer(Modifier.height(12.dp)); Label("Transport: ${if (config.ssh) "SSH tunnel via ${config.sshHost}" else "Direct"}", size = 13)
-                        Spacer(Modifier.height(24.dp)); Label(if (tested == final) "✓ Connection and explorer checks passed." else "Ready to test. You can also save without connecting.", if (tested == final) WorkspaceBlue else Color(0xFF8392A5), 13)
-                        Spacer(Modifier.height(12.dp)); Label("Your connection details will be encrypted locally and available after restarting MongoDesk.", Color(0xFF8392A5), 12)
+                        Spacer(Modifier.height(24.dp)); Label(if (tested == final) "✓ Connection and explorer checks passed." else "Ready to test. You can also save without connecting.", if (tested == final) WorkspaceBlue else AppColors.muted, 13)
+                        Spacer(Modifier.height(12.dp)); Label("Your connection details will be encrypted locally and available after restarting MongoDesk.", AppColors.muted, 12)
                     }
                 }
             }
-            Spacer(Modifier.height(12.dp)); Label(if (busy) "Working…" else message, Color(0xFF8392A5), 12)
+            Spacer(Modifier.height(12.dp)); Label(if (busy) "Working…" else message, AppColors.muted, 12)
             Spacer(Modifier.height(16.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                 ToolButton("Cancel", !busy) { dismiss() }

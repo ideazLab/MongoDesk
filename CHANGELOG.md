@@ -6,6 +6,8 @@
 
 ## [1.1.0]
 
+- Custom dark appearance with persistent Light, Dark, and live Follow system modes.
+
 - Clear document pagination controls, result ranges, matching document counts, end-of-results indicators, and per-tab page sizes.
 
 - Windows MSI creates Start menu and desktop shortcuts, with installation and uninstall registration verified in CI.

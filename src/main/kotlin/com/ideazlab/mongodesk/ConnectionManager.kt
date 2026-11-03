@@ -66,7 +66,7 @@ internal fun ConnectionManagerDialog(profiles: ConnectionProfiles, activeId: Str
         try { connect(workspace) } catch (e: Exception) { workspace.close(); throw e }
     }
     Dialog(onDismissRequest = { if (!busy) dismiss() }, properties = DialogProperties(usePlatformDefaultWidth = false, dismissOnClickOutside = false)) {
-        Column(Modifier.width(1000.dp).height(620.dp).background(Color.White).border(1.dp, WorkspaceLine).padding(20.dp)) {
+        Column(Modifier.width(1000.dp).height(620.dp).background(AppColors.surface).border(1.dp, WorkspaceLine).padding(20.dp)) {
             Label("Connection Manager", size = 23, bold = true); Spacer(Modifier.height(16.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 ToolButton("+ New connection", !busy) { create() }
@@ -82,12 +82,12 @@ internal fun ConnectionManagerDialog(profiles: ConnectionProfiles, activeId: Str
             }
             Spacer(Modifier.height(16.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Label("Filter connections", Color(0xFF8392A5), 12); Spacer(Modifier.width(12.dp))
+                Label("Filter connections", AppColors.muted, 12); Spacer(Modifier.width(12.dp))
                 Editor(search, { search = it }, Modifier.weight(1f).height(38.dp), enabled = !busy)
                 Spacer(Modifier.width(14.dp)); Label("${matches.size} matches", size = 12)
             }
             Spacer(Modifier.height(12.dp))
-            Row(Modifier.fillMaxWidth().background(Color(0xFFF5F6FA)).padding(12.dp)) {
+            Row(Modifier.fillMaxWidth().background(AppColors.pale).padding(12.dp)) {
                 Label("NAME", size = 11, bold = true, modifier = Modifier.weight(1f))
                 Label("DB SERVER", size = 11, bold = true, modifier = Modifier.width(230.dp))
                 Label("SECURITY", size = 11, bold = true, modifier = Modifier.width(200.dp))
@@ -97,19 +97,19 @@ internal fun ConnectionManagerDialog(profiles: ConnectionProfiles, activeId: Str
                 val list = androidx.compose.foundation.lazy.rememberLazyListState()
                 LazyColumn(Modifier.fillMaxSize(), state = list) {
                     items(matches, key = { it.id }) { entry ->
-                        Row(Modifier.fillMaxWidth().background(if (selectedId == entry.id) Color(0xFFEAF2FF) else Color.White)
+                        Row(Modifier.fillMaxWidth().background(if (selectedId == entry.id) AppColors.selection else AppColors.surface)
                             .combinedClickable(enabled = !busy, onClick = { selectedId = entry.id; confirmDelete = false }, onDoubleClick = { selectedId = entry.id; open(entry.id) }).padding(12.dp)) {
                             Label(entry.name, size = 13, bold = true, modifier = Modifier.weight(1f))
                             val config = details[entry.id]
                             val parsed = config?.let { runCatching { com.mongodb.ConnectionString(it.uri) }.getOrNull() }
-                            Label(parsed?.hosts?.joinToString() ?: "Details unavailable", Color(0xFF8392A5), 12, modifier = Modifier.width(230.dp))
-                            Label(if (config == null) "Unavailable" else listOfNotNull(if (config.ssh) "SSH" else "Direct", if (parsed?.credential != null) "Authenticated" else null, if (parsed?.sslEnabled == true) "TLS" else null).joinToString(" · "), Color(0xFF8392A5), 12, modifier = Modifier.width(200.dp))
-                            Label(if (entry.id in connectedIds) "● Connected" else "Saved", if (entry.id in connectedIds) WorkspaceBlue else Color(0xFF8392A5), 12, modifier = Modifier.width(150.dp))
+                            Label(parsed?.hosts?.joinToString() ?: "Details unavailable", AppColors.muted, 12, modifier = Modifier.width(230.dp))
+                            Label(if (config == null) "Unavailable" else listOfNotNull(if (config.ssh) "SSH" else "Direct", if (parsed?.credential != null) "Authenticated" else null, if (parsed?.sslEnabled == true) "TLS" else null).joinToString(" · "), AppColors.muted, 12, modifier = Modifier.width(200.dp))
+                            Label(if (entry.id in connectedIds) "● Connected" else "Saved", if (entry.id in connectedIds) WorkspaceBlue else AppColors.muted, 12, modifier = Modifier.width(150.dp))
                         }
                     }
                 }
                 VerticalScrollbar(rememberScrollbarAdapter(list), Modifier.align(Alignment.CenterEnd).fillMaxHeight())
-                if (matches.isEmpty()) Label(if (entries.isEmpty()) "No saved connections. Create or import one to begin." else "No matching connections.", Color(0xFF8392A5), modifier = Modifier.align(Alignment.Center))
+                if (matches.isEmpty()) Label(if (entries.isEmpty()) "No saved connections. Create or import one to begin." else "No matching connections.", AppColors.muted, modifier = Modifier.align(Alignment.Center))
             }
             Spacer(Modifier.height(12.dp))
             if (confirmDelete && selected != null) {
@@ -123,10 +123,10 @@ internal fun ConnectionManagerDialog(profiles: ConnectionProfiles, activeId: Str
                     } }
                 }
             }
-            Label(if (busy) "Working… $message" else message, Color(0xFF8392A5), 12)
+            Label(if (busy) "Working… $message" else message, AppColors.muted, 12)
             Spacer(Modifier.height(14.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Label("${entries.size} saved connections", Color(0xFF8392A5), 12)
+                Label("${entries.size} saved connections", AppColors.muted, 12)
                 Spacer(Modifier.weight(1f))
                 ToolButton("Close", !busy) { dismiss() }
                 ToolButton("Connect", !busy && selected != null, primary = true) { selected?.let { open(it.id) } }
@@ -136,14 +136,14 @@ internal fun ConnectionManagerDialog(profiles: ConnectionProfiles, activeId: Str
     transfer?.let { mode ->
         val importing = mode == "Import"
         Dialog(onDismissRequest = { if (!busy) { transfer = null; password = ""; repeated = "" } }, properties = DialogProperties(usePlatformDefaultWidth = false, dismissOnClickOutside = false)) {
-            Column(Modifier.width(560.dp).height(390.dp).background(Color.White).border(1.dp, WorkspaceLine).padding(22.dp)) {
+            Column(Modifier.width(560.dp).height(390.dp).background(AppColors.surface).border(1.dp, WorkspaceLine).padding(22.dp)) {
                 Label(mode, size = 21, bold = true); Spacer(Modifier.height(12.dp))
-                Label(if (importing) "Enter the backup password. Imported profiles are added as new connections; existing profiles are preserved." else "The backup includes MongoDB and SSH credentials. Choose a password to protect it. Private key files are not included.", Color(0xFF8392A5), 12)
+                Label(if (importing) "Enter the backup password. Imported profiles are added as new connections; existing profiles are preserved." else "The backup includes MongoDB and SSH credentials. Choose a password to protect it. Private key files are not included.", AppColors.muted, 12)
                 Spacer(Modifier.height(14.dp))
                 Label("BACKUP PASSWORD", size = 10); Editor(password, { password = it }, Modifier.fillMaxWidth().height(40.dp), secret = true, enabled = !busy)
                 if (!importing) { Spacer(Modifier.height(8.dp)); Label("CONFIRM PASSWORD", size = 10); Editor(repeated, { repeated = it }, Modifier.fillMaxWidth().height(40.dp), secret = true, enabled = !busy) }
                 Spacer(Modifier.weight(1f))
-                Label(message, Color(0xFF8392A5), 11)
+                Label(message, AppColors.muted, 11)
                 Row(Modifier.padding(top = 12.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     ToolButton("Cancel", !busy) { transfer = null; password = ""; repeated = "" }
                     ToolButton("Choose file…", !busy && password.isNotEmpty() && (importing || (password.length >= 8 && password == repeated)), primary = true) {

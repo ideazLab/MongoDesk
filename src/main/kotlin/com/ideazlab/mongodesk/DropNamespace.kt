@@ -41,16 +41,16 @@ internal fun DropNamespaceDialog(target: DropNamespaceTarget, dropped: () -> Uni
     var error by remember { mutableStateOf("") }
     val scope = rememberCoroutineScope()
     Dialog(onDismissRequest = { if (!busy) dismiss() }, properties = DialogProperties(usePlatformDefaultWidth = false, dismissOnClickOutside = false, dismissOnBackPress = !busy)) {
-        Column(Modifier.width(620.dp).background(Color.White).border(1.dp, WorkspaceLine).padding(24.dp)) {
+        Column(Modifier.width(620.dp).background(AppColors.surface).border(1.dp, WorkspaceLine).padding(24.dp)) {
             Label(target.title, size = 23, bold = true)
             Spacer(Modifier.height(12.dp)); Label("Connection: ${target.session.config.name}", size = 13)
             Spacer(Modifier.height(8.dp)); Label("Target: ${target.namespace}", size = 13, bold = true)
             Spacer(Modifier.height(16.dp)); Label(if (target.collection == null)
                 "Permanently deletes this database and all its collections, documents, indexes, and views. MongoDesk cannot undo this operation."
-                else "Permanently deletes this collection and its documents and indexes. MongoDesk cannot undo this operation.", Color(0xFFDC3545), 13)
-            Spacer(Modifier.height(16.dp)); Label("Related open collection tabs will be closed. Unsaved work in those tabs will be lost.", Color(0xFF8392A5), 12)
+                else "Permanently deletes this collection and its documents and indexes. MongoDesk cannot undo this operation.", AppColors.danger, 13)
+            Spacer(Modifier.height(16.dp)); Label("Related open collection tabs will be closed. Unsaved work in those tabs will be lost.", AppColors.muted, 12)
             Spacer(Modifier.height(16.dp)); Field("TYPE ${target.namespace} TO CONFIRM", confirmation, enabled = !busy) { confirmation = it; error = "" }
-            if (error.isNotBlank()) { Spacer(Modifier.height(12.dp)); Label(error, Color(0xFFDC3545), 12) }
+            if (error.isNotBlank()) { Spacer(Modifier.height(12.dp)); Label(error, AppColors.danger, 12) }
             Spacer(Modifier.height(22.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 ToolButton("Cancel", !busy) { dismiss() }

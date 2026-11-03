@@ -73,9 +73,9 @@ internal fun ServerInfoDialog(target: ServerInfoTarget, dismiss: () -> Unit) {
     fun close() { job?.cancel(); dismiss() }
     LaunchedEffect(target) { load() }
     Dialog(onDismissRequest = { close() }, properties = DialogProperties(usePlatformDefaultWidth = false, dismissOnClickOutside = false)) {
-        Column(Modifier.width(1040.dp).height(760.dp).background(Color.White).border(1.dp, WorkspaceLine).padding(22.dp)) {
+        Column(Modifier.width(1040.dp).height(760.dp).background(AppColors.surface).border(1.dp, WorkspaceLine).padding(22.dp)) {
             Label(target.kind.label, size = 23, bold = true)
-            Spacer(Modifier.height(7.dp)); Label("${target.session.config.name} · ${runCatching { ConnectionString(target.session.config.uri).hosts.joinToString() }.getOrDefault("")}", Color(0xFF8392A5), 12)
+            Spacer(Modifier.height(7.dp)); Label("${target.session.config.name} · ${runCatching { ConnectionString(target.session.config.uri).hosts.joinToString() }.getOrDefault("")}", AppColors.muted, 12)
             Spacer(Modifier.height(14.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                 ToolButton("Refresh", !busy) { load() }
@@ -85,17 +85,17 @@ internal fun ServerInfoDialog(target: ServerInfoTarget, dismiss: () -> Unit) {
                     try { clipboard.setClipEntry(ClipEntry(StringSelection(document.pretty()))); copyMessage = "Copied JSON" }
                     catch (_: Exception) { copyMessage = "Could not copy JSON. Try again." }
                 } } }
-                Spacer(Modifier.weight(1f)); Label(if (busy) "Loading…" else if (updated.isNotEmpty() && error.isEmpty()) "Updated $updated" else "", Color(0xFF8392A5), 11)
+                Spacer(Modifier.weight(1f)); Label(if (busy) "Loading…" else if (updated.isNotEmpty() && error.isEmpty()) "Updated $updated" else "", AppColors.muted, 11)
             }
             Spacer(Modifier.height(14.dp))
             val document = result
             if (document == null) Box(Modifier.weight(1f).fillMaxWidth().border(1.dp, WorkspaceLine).padding(24.dp), contentAlignment = Alignment.Center) {
-                Label(if (busy) "Loading ${target.kind.label.lowercase()}…" else error.ifEmpty { "Select Refresh to load server information." }, if (error.isNotEmpty()) Color(0xFFDC3545) else Color(0xFF8392A5), 13)
+                Label(if (busy) "Loading ${target.kind.label.lowercase()}…" else error.ifEmpty { "Select Refresh to load server information." }, if (error.isNotEmpty()) AppColors.danger else AppColors.muted, 13)
             } else if (json) {
                 val vertical = rememberScrollState(); val horizontal = rememberScrollState()
-                Box(Modifier.weight(1f).fillMaxWidth().background(Color(0xFFFAFBFC)).border(1.dp, WorkspaceLine)) {
+                Box(Modifier.weight(1f).fillMaxWidth().background(AppColors.subtle).border(1.dp, WorkspaceLine)) {
                     SelectionContainer(Modifier.fillMaxSize().verticalScroll(vertical).horizontalScroll(horizontal).padding(14.dp)) {
-                        BasicText(document.pretty(), style = TextStyle(color = Color(0xFF1B2E4B), fontFamily = FontFamily.Monospace, fontSize = 12.sp))
+                        BasicText(document.pretty(), style = TextStyle(color = AppColors.text, fontFamily = FontFamily.Monospace, fontSize = 12.sp))
                     }
                     VerticalScrollbar(rememberScrollbarAdapter(vertical), Modifier.align(Alignment.CenterEnd).fillMaxHeight())
                     HorizontalScrollbar(rememberScrollbarAdapter(horizontal), Modifier.align(Alignment.BottomCenter).fillMaxWidth())
@@ -104,7 +104,7 @@ internal fun ServerInfoDialog(target: ServerInfoTarget, dismiss: () -> Unit) {
                 select = { selected = it }, inspect = {}, modifier = Modifier.weight(1f).fillMaxWidth().border(1.dp, WorkspaceLine))
             Spacer(Modifier.height(12.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Label(if (copyMessage.isNotEmpty()) copyMessage else "Read-only · admin.${target.kind.command} · Server selected by this connection", Color(0xFF8392A5), 11)
+                Label(if (copyMessage.isNotEmpty()) copyMessage else "Read-only · admin.${target.kind.command} · Server selected by this connection", AppColors.muted, 11)
                 Spacer(Modifier.weight(1f)); ToolButton("Close") { close() }
             }
         }

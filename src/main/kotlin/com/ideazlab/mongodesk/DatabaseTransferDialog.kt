@@ -28,8 +28,8 @@ internal fun TransferChoice(value: String, options: List<Pair<String, String>>, 
     Box {
         ToolButton((options.firstOrNull { it.first == value }?.second ?: "Choose…") + " ▾", enabled) { expanded = !expanded }
         if (expanded) Popup(onDismissRequest = { expanded = false }, properties = PopupProperties(focusable = true)) {
-            Column(Modifier.widthIn(min = 240.dp, max = 500.dp).heightIn(max = 280.dp).background(Color.White).border(1.dp, WorkspaceLine).verticalScroll(rememberScrollState())) {
-                options.forEach { (id, label) -> Label(label, if (id == value) WorkspaceBlue else Color(0xFF1B2E4B), 12,
+            Column(Modifier.widthIn(min = 240.dp, max = 500.dp).heightIn(max = 280.dp).background(AppColors.surface).border(1.dp, WorkspaceLine).verticalScroll(rememberScrollState())) {
+                options.forEach { (id, label) -> Label(label, if (id == value) WorkspaceBlue else AppColors.text, 12,
                     modifier = Modifier.fillMaxWidth().clickable { expanded = false; choose(id) }.padding(12.dp)) }
             }
         }
@@ -171,9 +171,9 @@ internal fun DatabaseTransferDialog(request: DatabaseTransferRequest, connection
         }
     }
     Dialog(onDismissRequest = { if (!busy) dismiss() }, properties = DialogProperties(usePlatformDefaultWidth = false, dismissOnClickOutside = false)) {
-        Column(Modifier.width(900.dp).height(760.dp).background(Color.White).border(1.dp, WorkspaceLine).padding(24.dp)) {
+        Column(Modifier.width(900.dp).height(760.dp).background(AppColors.surface).border(1.dp, WorkspaceLine).padding(24.dp)) {
             Label(title, size = 24, bold = true); Spacer(Modifier.height(8.dp))
-            Label("${step + 1} of 3 · ${listOf(if (importing) "Archive and destination" else "Export source", "Options", "Review and run")[step]}", Color(0xFF8392A5), 12)
+            Label("${step + 1} of 3 · ${listOf(if (importing) "Archive and destination" else "Export source", "Options", "Review and run")[step]}", AppColors.muted, 12)
             Spacer(Modifier.height(18.dp))
             Column(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState())) {
                 when (step) {
@@ -200,7 +200,7 @@ internal fun DatabaseTransferDialog(request: DatabaseTransferRequest, connection
                                     }
                                 }
                             }
-                            Spacer(Modifier.height(8.dp)); Label(path?.toString() ?: "Choose a mongodump archive (.archive or .archive.gz).", Color(0xFF8392A5), 12)
+                            Spacer(Modifier.height(8.dp)); Label(path?.toString() ?: "Choose a mongodump archive (.archive or .archive.gz).", AppColors.muted, 12)
                             if (serverScope) {
                                 archiveInfo?.let { info ->
                                     Spacer(Modifier.height(12.dp)); Label("All databases in archive (original names):", size = 13, bold = true)
@@ -221,7 +221,7 @@ internal fun DatabaseTransferDialog(request: DatabaseTransferRequest, connection
                         } else if (serverScope) {
                             Label("ALL DATABASES", size = 11, bold = true)
                             serverDatabases.forEach { Label(it, size = 13) }
-                            Spacer(Modifier.height(12.dp)); Label("Exports all authorized databases. MongoDB's local replication database is excluded. Archives may include users and roles; imports retain original database names. Pause writes for a consistent export.", Color(0xFF8392A5), 12)
+                            Spacer(Modifier.height(12.dp)); Label("Exports all authorized databases. MongoDB's local replication database is excluded. Archives may include users and roles; imports retain original database names. Pause writes for a consistent export.", AppColors.muted, 12)
                         } else {
                             Label("DATABASE", size = 11, bold = true); Spacer(Modifier.height(8.dp))
                             TransferChoice(database, open?.databases.orEmpty().map { it to it }, !busy && !collectionOnly) { database = it; collection = ""; source = DatabaseExportSource.DATABASE; exportFormat = DatabaseExportFormat.ARCHIVE; path = null }
@@ -243,7 +243,7 @@ internal fun DatabaseTransferDialog(request: DatabaseTransferRequest, connection
                                         DatabaseExportSource.COLLECTION -> "Export all documents to a file or another collection. MongoDB archives also preserve collection metadata."
                                         DatabaseExportSource.QUERY -> "Re-run the last executed filter or pipeline and export all matching documents, across every page."
                                         DatabaseExportSource.SELECTED -> "Export the currently selected document to a file or another collection."
-                                    }, Color(0xFF8392A5), 11, modifier = Modifier.padding(start = 30.dp, bottom = 10.dp))
+                                    }, AppColors.muted, 11, modifier = Modifier.padding(start = 30.dp, bottom = 10.dp))
                                 }
                             }
                         }
@@ -256,7 +256,7 @@ internal fun DatabaseTransferDialog(request: DatabaseTransferRequest, connection
                                 DatabaseImportMode.NEW -> if (serverScope) "Every database in the archive must be absent or empty on the destination. All are checked before restore starts." else if (collectionOnly) "The destination collection must not exist. Only the selected archive collection is restored." else "The destination must have no collections. Collections, metadata, indexes, and views will be recreated."
                                 DatabaseImportMode.MERGE -> "Documents are inserted into existing collections. Existing documents are not updated; duplicate _id values stop the import."
                                 DatabaseImportMode.REPLACE -> if (collectionOnly) "Only the destination collection is dropped and recreated. Other collections are left untouched." else "Collections included in the archive are dropped and recreated. Other destination collections are left untouched."
-                            }, Color(0xFF8392A5), 12)
+                            }, AppColors.muted, 12)
                         } else {
                             Label("EXPORT FORMAT", size = 11, bold = true)
                             Column(Modifier.selectableGroup()) {
@@ -278,7 +278,7 @@ internal fun DatabaseTransferDialog(request: DatabaseTransferRequest, connection
                                     else chooseDatabaseTransferFile(false, (if (serverScope) "server" else database) + (if (source != DatabaseExportSource.DATABASE && collection.isNotBlank()) ".$collection" else "") + exportFormat.extension)
                                 selected?.let { path = it }
                             }
-                            Spacer(Modifier.height(10.dp)); Label(path?.toString() ?: "No destination selected.", Color(0xFF8392A5), 12)
+                            Spacer(Modifier.height(10.dp)); Label(path?.toString() ?: "No destination selected.", AppColors.muted, 12)
                             }
                             Spacer(Modifier.height(14.dp)); Label(when (exportFormat) {
                                 DatabaseExportFormat.ARCHIVE -> "Restorable with MongoDesk or mongorestore, including indexes and metadata. Pause application writes for a consistent live database export."
@@ -288,15 +288,15 @@ internal fun DatabaseTransferDialog(request: DatabaseTransferRequest, connection
                                 DatabaseExportFormat.SQL -> "An SQL script with CREATE TABLE and INSERT statements, ANSI quoted identifiers, and TEXT columns. Objects and arrays use Extended JSON. Missing/null fields become SQL NULL."
                                 DatabaseExportFormat.COPY -> "Copies documents and their _id values, without indexes or collection options. The complete source is read before copying starts. Duplicate IDs stop the copy; previous inserts remain."
                                 DatabaseExportFormat.CSV -> "Headers include top-level fields from all documents. Missing fields are blank; objects and arrays use Extended JSON text. Values containing commas, quotes, or newlines are quoted."
-                            }, Color(0xFF8392A5), 12)
+                            }, AppColors.muted, 12)
                         }
                         if (databaseFiles) {
-                            Spacer(Modifier.height(12.dp)); Label((if (serverScope) "Creates one subfolder per database. " else "") + "Creates a new export folder with one file per collection/view, plus manifest.json mapping filenames to collection names. Views export their current documents. Indexes, options, and view definitions require a MongoDB archive. Pause writes if you need a consistent snapshot across collections.", Color(0xFF8392A5), 12)
+                            Spacer(Modifier.height(12.dp)); Label((if (serverScope) "Creates one subfolder per database. " else "") + "Creates a new export folder with one file per collection/view, plus manifest.json mapping filenames to collection names. Views export their current documents. Indexes, options, and view definitions require a MongoDB archive. Pause writes if you need a consistent snapshot across collections.", AppColors.muted, 12)
                         }
                         if (needsTools) {
                             Spacer(Modifier.height(22.dp)); Field("MONGODB DATABASE TOOLS · BIN FOLDER", tools, enabled = !busy) { tools = it }
                             ToolButton("Choose tools folder…", !busy) { chooseToolsDirectory()?.let { tools = it } }
-                            Spacer(Modifier.height(8.dp)); Label("Uses mongodump/mongorestore 100.3 or later. Connection credentials are passed through an owner-only temporary configuration file.", Color(0xFF8392A5), 11)
+                            Spacer(Modifier.height(8.dp)); Label("Uses mongodump/mongorestore 100.3 or later. Connection credentials are passed through an owner-only temporary configuration file.", AppColors.muted, 11)
                         }
                     }
                     2 -> {
@@ -308,29 +308,29 @@ internal fun DatabaseTransferDialog(request: DatabaseTransferRequest, connection
                         }
                         if (databaseFiles) { Spacer(Modifier.height(8.dp)); Label("One file per collection in a new folder; existing exports are preserved.", size = 13) }
                         if (!importing) { Spacer(Modifier.height(8.dp)); Label("Format: ${exportFormat.label}", size = 13) }
-                        Spacer(Modifier.height(8.dp)); Label(path?.toString().orEmpty(), Color(0xFF8392A5), 12)
+                        Spacer(Modifier.height(8.dp)); Label(path?.toString().orEmpty(), AppColors.muted, 12)
                         if (copying) {
                             Spacer(Modifier.height(12.dp)); Label("Destination: ${copyDestination?.session?.config?.name.orEmpty()} → $copyNamespace · ${if (copyAppend) "Append" else "New collection"}", size = 13)
                             if (!done) {
-                                Spacer(Modifier.height(12.dp)); Label("Copies are not rolled back if cancelled or interrupted.", Color(0xFF8392A5), 12)
+                                Spacer(Modifier.height(12.dp)); Label("Copies are not rolled back if cancelled or interrupted.", AppColors.muted, 12)
                                 Field("TYPE $copyNamespace TO CONFIRM", confirmation, enabled = !busy) { confirmation = it }
                             }
                         } else if (importing && !done) {
-                            Spacer(Modifier.height(18.dp)); Label((if (serverScope) "Imports every database under its original name, including archived users and roles. " else "") + "Import writes to the destination database. Failed or cancelled imports can leave partial changes; they are not rolled back.", Color(0xFF8392A5), 12)
+                            Spacer(Modifier.height(18.dp)); Label((if (serverScope) "Imports every database under its original name, including archived users and roles. " else "") + "Import writes to the destination database. Failed or cancelled imports can leave partial changes; they are not rolled back.", AppColors.muted, 12)
                             Spacer(Modifier.height(12.dp)); Field("TYPE $confirmationTarget TO CONFIRM", confirmation, enabled = !busy) { confirmation = it }
                         } else if (!importing) {
-                            Spacer(Modifier.height(16.dp)); Label("Export files contain database data and are not encrypted.", Color(0xFF8392A5), 12)
+                            Spacer(Modifier.height(16.dp)); Label("Export files contain database data and are not encrypted.", AppColors.muted, 12)
                         }
                         if (log.isNotEmpty()) {
                             Spacer(Modifier.height(14.dp))
-                            Column(Modifier.fillMaxWidth().height(180.dp).background(Color(0xFFFAFBFC)).border(1.dp, WorkspaceLine).padding(10.dp).verticalScroll(rememberScrollState())) {
-                                log.takeLast(30).forEach { Label(it, Color(0xFF596882), 11) }
+                            Column(Modifier.fillMaxWidth().height(180.dp).background(AppColors.subtle).border(1.dp, WorkspaceLine).padding(10.dp).verticalScroll(rememberScrollState())) {
+                                log.takeLast(30).forEach { Label(it, AppColors.secondary, 11) }
                             }
                         }
                     }
                 }
             }
-            Spacer(Modifier.height(12.dp)); Label(message.takeLast(1600), if (done) WorkspaceBlue else Color(0xFF8392A5), 12)
+            Spacer(Modifier.height(12.dp)); Label(message.takeLast(1600), if (done) WorkspaceBlue else AppColors.muted, 12)
             Spacer(Modifier.height(14.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 ToolButton(if (busy) "Cancel transfer" else if (done) "Close" else "Cancel") { if (busy) job?.cancel() else dismiss() }

@@ -57,13 +57,13 @@ internal fun CreateDatabaseDialog(session: MongoSession, created: (String, Strin
     var message by remember { mutableStateOf("") }
     val scope = rememberCoroutineScope()
     Dialog(onDismissRequest = { if (!busy) dismiss() }, properties = DialogProperties(usePlatformDefaultWidth = false, dismissOnClickOutside = false, dismissOnBackPress = !busy)) {
-        Column(Modifier.width(580.dp).background(Color.White).border(1.dp, WorkspaceLine).padding(24.dp)) {
+        Column(Modifier.width(580.dp).background(AppColors.surface).border(1.dp, WorkspaceLine).padding(24.dp)) {
             Label(title, size = 23, bold = true)
             Spacer(Modifier.height(10.dp)); Label("Connection: ${session.config.name}", size = 13)
             Spacer(Modifier.height(18.dp)); Field("DATABASE NAME", database, enabled = !busy && !creatingCollection) { database = it; message = "" }
             Spacer(Modifier.height(14.dp)); Field(if (creatingCollection) "COLLECTION NAME" else "INITIAL COLLECTION", collection, enabled = !busy) { collection = it; message = "" }
-            Spacer(Modifier.height(14.dp)); Label(if (creatingCollection) "Creates an empty collection in the selected database without inserting documents." else "MongoDB creates a database when it contains a collection. This creates an empty collection without inserting documents.", Color(0xFF8392A5), 12)
-            if (message.isNotBlank()) { Spacer(Modifier.height(12.dp)); Label(message, Color(0xFFDC3545), 12) }
+            Spacer(Modifier.height(14.dp)); Label(if (creatingCollection) "Creates an empty collection in the selected database without inserting documents." else "MongoDB creates a database when it contains a collection. This creates an empty collection without inserting documents.", AppColors.muted, 12)
+            if (message.isNotBlank()) { Spacer(Modifier.height(12.dp)); Label(message, AppColors.danger, 12) }
             Spacer(Modifier.height(22.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 ToolButton("Cancel", !busy) { dismiss() }

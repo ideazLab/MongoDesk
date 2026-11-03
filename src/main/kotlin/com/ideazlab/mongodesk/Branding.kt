@@ -7,8 +7,12 @@ import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.loadImageBitmap
 
 @Composable
-internal fun mongoDeskIcon(): Painter = remember {
-    BitmapPainter(checkNotNull(object {}.javaClass.getResourceAsStream("/branding/mongodesk-icon.png")) {
-        "The MongoDesk icon resource is missing."
-    }.use { loadImageBitmap(it) })
+internal fun mongoDeskIcon(): Painter {
+    val dark = LocalDarkAppearance.current
+    return remember(dark) {
+        val resource = if (dark) "/branding/mongodesk-icon-dark.png" else "/branding/mongodesk-icon.png"
+        BitmapPainter(checkNotNull(object {}.javaClass.getResourceAsStream(resource)) {
+            "The MongoDesk icon resource is missing."
+        }.use { loadImageBitmap(it) })
+    }
 }

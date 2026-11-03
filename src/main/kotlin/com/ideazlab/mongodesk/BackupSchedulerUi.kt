@@ -30,7 +30,7 @@ internal fun BackupToolbar(enabled: Boolean, open: (Boolean) -> Unit) {
     Box {
         ToolButton("Backups ▾", enabled) { expanded = !expanded }
         if (expanded) Popup(onDismissRequest = { expanded = false }, properties = PopupProperties(focusable = true)) {
-            Column(Modifier.width(240.dp).background(Color.White).border(1.dp, WorkspaceLine).padding(4.dp)) {
+            Column(Modifier.width(240.dp).background(AppColors.surface).border(1.dp, WorkspaceLine).padding(4.dp)) {
                 listOf("Manage schedules…" to false, "Schedule database backup…" to true).forEach { (label, create) ->
                     Label(label, size = 12, modifier = Modifier.fillMaxWidth().clickable { expanded = false; open(create) }.padding(12.dp))
                 }
@@ -74,10 +74,10 @@ internal fun BackupManagerDialog(request: BackupManagerRequest, profiles: Connec
     val current = state.schedules.firstOrNull { it.id == selected }
 
     Dialog(onDismissRequest = { if (!busy) dismiss() }, properties = DialogProperties(usePlatformDefaultWidth = false, dismissOnClickOutside = false)) {
-        Column(Modifier.width(1060.dp).height(790.dp).background(Color.White).border(1.dp, WorkspaceLine).padding(24.dp)) {
+        Column(Modifier.width(1060.dp).height(790.dp).background(AppColors.surface).border(1.dp, WorkspaceLine).padding(24.dp)) {
             Label("Database backup schedules", size = 24, bold = true)
-            Spacer(Modifier.height(8.dp)); Label("Runs in the background while you are logged in, even when MongoDesk is closed. The computer must be awake and the server reachable.", Color(0xFF8392A5), 12)
-            Spacer(Modifier.height(8.dp)); Label("BSON archives include collection data, indexes, and metadata. Every archive is kept; there is no automatic deletion. Missed intervals run once when available again. Live writes are not a consistent snapshot.", Color(0xFF8392A5), 12)
+            Spacer(Modifier.height(8.dp)); Label("Runs in the background while you are logged in, even when MongoDesk is closed. The computer must be awake and the server reachable.", AppColors.muted, 12)
+            Spacer(Modifier.height(8.dp)); Label("BSON archives include collection data, indexes, and metadata. Every archive is kept; there is no automatic deletion. Missed intervals run once when available again. Live writes are not a consistent snapshot.", AppColors.muted, 12)
             Spacer(Modifier.height(16.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 ToolButton("+ Schedule", !busy) { creating = true }
@@ -93,12 +93,12 @@ internal fun BackupManagerDialog(request: BackupManagerRequest, profiles: Connec
             }
             Spacer(Modifier.height(12.dp))
             LazyColumn(Modifier.fillMaxWidth().height(205.dp).border(1.dp, WorkspaceLine)) {
-                if (state.schedules.isEmpty()) item { Label("No backup schedules. Create one to choose a saved connection, database, folder, and start time.", Color(0xFF8392A5), 12, modifier = Modifier.padding(16.dp)) }
+                if (state.schedules.isEmpty()) item { Label("No backup schedules. Create one to choose a saved connection, database, folder, and start time.", AppColors.muted, 12, modifier = Modifier.padding(16.dp)) }
                 items(state.schedules, key = { it.id }) { schedule ->
                     val connectionName = savedProfiles.firstOrNull { it.id == schedule.connectionId }?.name ?: "Missing saved connection"
-                    Column(Modifier.fillMaxWidth().background(if (selected == schedule.id) Color(0xFFEAF2FF) else Color.White).clickable { selected = schedule.id }.padding(12.dp)) {
+                    Column(Modifier.fillMaxWidth().background(if (selected == schedule.id) AppColors.selection else AppColors.surface).clickable { selected = schedule.id }.padding(12.dp)) {
                         Label("${schedule.name} · $connectionName / ${schedule.database}", size = 13, bold = true)
-                        Spacer(Modifier.height(4.dp)); Label("${if (schedule.enabled) "Enabled" else "Paused/completed"} · ${if (schedule.interval == BackupInterval.ONCE) "Once" else "Every ${schedule.every} ${schedule.interval.label.lowercase()}"} · Next: ${backupTime(schedule.next, schedule.zone)} ${schedule.zone}${if (schedule.requested) " · Run queued" else ""}", Color(0xFF596882), 11)
+                        Spacer(Modifier.height(4.dp)); Label("${if (schedule.enabled) "Enabled" else "Paused/completed"} · ${if (schedule.interval == BackupInterval.ONCE) "Once" else "Every ${schedule.every} ${schedule.interval.label.lowercase()}"} · Next: ${backupTime(schedule.next, schedule.zone)} ${schedule.zone}${if (schedule.requested) " · Run queued" else ""}", AppColors.secondary, 11)
                     }
                 }
             }
@@ -116,16 +116,16 @@ internal fun BackupManagerDialog(request: BackupManagerRequest, profiles: Connec
             Spacer(Modifier.height(8.dp))
             LazyColumn(Modifier.weight(1f).fillMaxWidth().border(1.dp, WorkspaceLine)) {
                 val runs = state.runs.filter { selected == null || it.scheduleId == selected }.asReversed()
-                if (runs.isEmpty()) item { Label("No backups recorded yet. Scheduled runs are checked every minute.", Color(0xFF8392A5), 12, modifier = Modifier.padding(12.dp)) }
+                if (runs.isEmpty()) item { Label("No backups recorded yet. Scheduled runs are checked every minute.", AppColors.muted, 12, modifier = Modifier.padding(12.dp)) }
                 items(runs, key = { it.id }) { run ->
                     Column(Modifier.fillMaxWidth().padding(12.dp)) {
-                        Label("${run.status} · ${run.name} / ${run.database} · ${backupTime(run.started)}", if (run.status == "Failed" || run.status == "Interrupted") Color(0xFFDC3545) else Color(0xFF1B2E4B), 12, true)
-                        if (run.file.isNotBlank()) Label(run.file, Color(0xFF596882), 11)
-                        if (run.message.isNotBlank()) Label(run.message, Color(0xFF8392A5), 11)
+                        Label("${run.status} · ${run.name} / ${run.database} · ${backupTime(run.started)}", if (run.status == "Failed" || run.status == "Interrupted") AppColors.danger else AppColors.text, 12, true)
+                        if (run.file.isNotBlank()) Label(run.file, AppColors.secondary, 11)
+                        if (run.message.isNotBlank()) Label(run.message, AppColors.muted, 11)
                     }
                 }
             }
-            Spacer(Modifier.height(10.dp)); Label(if (busy) "Updating…" else error, Color(0xFFDC3545), 12)
+            Spacer(Modifier.height(10.dp)); Label(if (busy) "Updating…" else error, AppColors.danger, 12)
             Spacer(Modifier.height(12.dp)); Row { Spacer(Modifier.weight(1f)); ToolButton("Close", !busy) { dismiss() } }
         }
     }
@@ -157,7 +157,7 @@ private fun BackupScheduleEditor(initial: BackupSchedule?, request: BackupManage
     var error by remember { mutableStateOf("") }
     LaunchedEffect(profiles) { if (connectionId.isBlank()) connectionId = request.connectionId ?: profiles.firstOrNull()?.id.orEmpty() }
     Dialog(onDismissRequest = { if (!busy) dismiss() }, properties = DialogProperties(usePlatformDefaultWidth = false, dismissOnClickOutside = false, dismissOnBackPress = !busy)) {
-        Column(Modifier.width(760.dp).height(810.dp).background(Color.White).border(1.dp, WorkspaceLine).padding(24.dp)) {
+        Column(Modifier.width(760.dp).height(810.dp).background(AppColors.surface).border(1.dp, WorkspaceLine).padding(24.dp)) {
             Label(if (initial == null) "Schedule database backup" else "Edit backup schedule", size = 23, bold = true)
             Spacer(Modifier.height(12.dp))
             Column(Modifier.weight(1f).verticalScroll(rememberScrollState())) {
@@ -178,9 +178,9 @@ private fun BackupScheduleEditor(initial: BackupSchedule?, request: BackupManage
                 if (interval != BackupInterval.ONCE) { Spacer(Modifier.height(8.dp)); Field("EVERY · ${interval.label.uppercase()}", every) { every = it } }
                 Spacer(Modifier.height(12.dp)); Field("DATABASE TOOLS BIN FOLDER", tools) { tools = it }
                 RadioOption("Enabled", enabled) { enabled = true }; RadioOption("Paused", !enabled) { enabled = false }
-                Label("Archives are unencrypted, owner-only files. Saved encrypted connection details are used by the background worker. Past start times trigger one catch-up run. Daily/weekly repeats follow the selected time zone.", Color(0xFF8392A5), 12)
+                Label("Archives are unencrypted, owner-only files. Saved encrypted connection details are used by the background worker. Past start times trigger one catch-up run. Daily/weekly repeats follow the selected time zone.", AppColors.muted, 12)
             }
-            Spacer(Modifier.height(10.dp)); Label(if (busy) "Saving schedule and registering background worker…" else error.ifBlank { externalError }, Color(0xFFDC3545), 12)
+            Spacer(Modifier.height(10.dp)); Label(if (busy) "Saving schedule and registering background worker…" else error.ifBlank { externalError }, AppColors.danger, 12)
             Spacer(Modifier.height(12.dp)); Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 ToolButton("Cancel", !busy) { dismiss() }; Spacer(Modifier.weight(1f))
                 ToolButton("Save schedule", !busy, primary = true) {

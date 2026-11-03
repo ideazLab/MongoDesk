@@ -188,3 +188,7 @@ CI explicitly passes `-PciUnsigned=true` because personal signing identities are
 The agreed release process is documented in [RELEASING.md](RELEASING.md). `VERSION` is the single source for the app and installer version; the next planned release is **1.1.0**. A matching `v1.1.0` tag, pushed after the exact main commit passes CI, builds all four platforms and creates a draft GitHub Release with changelog notes, versioned installers, SHA-256 checksums, and an Ed25519-signed update manifest. A maintainer reviews and publishes it manually. Published releases are never overwritten by the workflow.
 
 The repository update-signing secret is configured; only its public key is committed. This establishes release delivery for the in-app updater, which still needs to be integrated before the first update-enabled release is tagged. Existing installations do not gain self-update support merely from this release-process change.
+
+### Appearance
+
+Choose **Appearance: System** in the app bar or **View → Appearance** to select Light, Dark, or Follow system. The setting is saved in `~/.mongodesk/appearance.txt`. System mode checks the OS appearance while the app is open; Linux also checks the GNOME/GSettings colour preference when available. Desktops that expose no supported preference use light until an explicit theme is selected. The custom palette applies to the workspace, editors, tables, tree view, menus, and dialogs; native window decorations and file pickers follow the OS.

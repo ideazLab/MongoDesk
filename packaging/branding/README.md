@@ -10,3 +10,5 @@ Approved direction: **01 Workspace** — two document panes forming an M, navy a
 Regenerate on macOS with `python3 packaging/icons/generate-icons.py`, then rebuild the application. The script only resizes and packages the approved master; it does not redraw it.
 
 Generation prompt: Extract and refine the top-left 01 Workspace concept into one isolated square app icon. Preserve the two angled navy/cobalt document panes, central M notch, three pale lines per pane, pale ice-blue rounded macOS tile, restrained shadow, and transparent exterior. No text, labels, or other concepts.
+
+Dark appearance uses `workspace-dark-transparent.png`: the same two-pane M in ice blue and azure with an alpha-transparent exterior and no app tile. The bundled sibling is `../../src/main/resources/branding/mongodesk-icon-dark.png`; `mongoDeskIcon()` switches variants with the active application theme. Packaged desktop icons keep the original tile for OS launchers.
